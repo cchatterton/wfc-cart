@@ -94,6 +94,23 @@ function wfcc_sanitize_settings($input) {
 		$output['delivery_retry_limit'] = min(20, max(1, absint($input['delivery_retry_limit'])));
 	}
 
+	foreach (array('receipt_generation_enabled', 'receipt_email_enabled') as $key) {
+		if (array_key_exists($key, $input)) {
+			$output[$key] = !empty($input[$key]);
+		}
+	}
+
+	if (isset($input['receipt_number_prefix'])) {
+		$prefix = strtoupper(substr(preg_replace('/[^A-Za-z0-9-]/', '', (string) $input['receipt_number_prefix']), 0, 12));
+		$output['receipt_number_prefix'] = $prefix ?: 'WFC';
+	}
+	if (isset($input['receipt_email_field_id'])) {
+		$output['receipt_email_field_id'] = wfcc_sanitize_gf_entry_key($input['receipt_email_field_id']);
+	}
+	if (isset($input['receipt_email_subject'])) {
+		$output['receipt_email_subject'] = substr(sanitize_text_field($input['receipt_email_subject']), 0, 200);
+	}
+
 	if (isset($input['approved_redirect_hosts'])) {
 		$hosts = preg_split('/[\r\n,]+/', (string) $input['approved_redirect_hosts']);
 		$hosts = array_filter(array_map('wfcc_sanitize_host', $hosts));
@@ -238,6 +255,26 @@ function wfcc_render_settings_fields($tab, $settings) {
 			echo '<td><textarea class="large-text code" rows="24" id="wfcc-checkout-packages" name="wfcc_settings[checkout_packages_json]">' . esc_textarea($packages) . '</textarea>';
 			echo '<p class="description">' . esc_html__('JSON object keyed by opaque package ID. Monetary amounts use Stripe minor units (5000 = AUD 50.00). Each checkout form must name its default package.', 'wfc-cart') . '</p></td></tr>';
 			break;
+		case 'receipts':
+			wfcc_settings_checkbox_row(
+				'receipt_generation_enabled',
+				__('Generate receipt records', 'wfc-cart'),
+				!array_key_exists('receipt_generation_enabled', $settings) || !empty($settings['receipt_generation_enabled']),
+				__('Create one deterministic receipt number for each successful payment.', 'wfc-cart')
+			);
+			wfcc_settings_checkbox_row(
+				'receipt_email_enabled',
+				__('Email receipts automatically', 'wfc-cart'),
+				!empty($settings['receipt_email_enabled']),
+				__('Email after the Gravity Forms entry and successful transaction are linked.', 'wfc-cart')
+			);
+			wfcc_settings_text_row('receipt_number_prefix', __('Receipt number prefix', 'wfc-cart'), $settings['receipt_number_prefix'] ?? 'WFC');
+			wfcc_settings_text_row('receipt_email_field_id', __('Gravity Forms email field ID', 'wfc-cart'), $settings['receipt_email_field_id'] ?? '');
+			wfcc_settings_text_row('receipt_email_subject', __('Email subject', 'wfc-cart'), $settings['receipt_email_subject'] ?? __('Your contribution receipt {receipt_number}', 'wfc-cart'));
+			echo '<tr><th scope="row">' . esc_html__('Privacy', 'wfc-cart') . '</th><td><p class="description">';
+			echo esc_html__('Receipt email addresses are read from the protected Gravity Forms entry when sending and are not copied into transaction metadata.', 'wfc-cart');
+			echo '</p></td></tr>';
+			break;
 		case 'advanced':
 			wfcc_settings_text_row('delivery_retry_limit', __('Delivery retry limit', 'wfc-cart'), isset($settings['delivery_retry_limit']) ? $settings['delivery_retry_limit'] : 8, 'number');
 			break;
@@ -286,5 +323,25 @@ function wfcc_settings_secret_row($key, $label, $secret) {
 		'' === $secret
 			? esc_html__('Not configured.', 'wfc-cart')
 			: esc_html(sprintf(__('Configured: %s. Leave blank to keep it.', 'wfc-cart'), wfcc_mask_secret($secret)))
+	);
+}
+
+/**
+ * Render a checkbox setting row with an explicit unchecked value.
+ *
+ * @param string $key         Key.
+ * @param string $label       Label.
+ * @param bool   $checked     Checked state.
+ * @param string $description Description.
+ * @return void
+ */
+function wfcc_settings_checkbox_row($key, $label, $checked, $description = '') {
+	printf(
+		'<tr><th scope="row">%1$s</th><td><input type="hidden" name="wfcc_settings[%2$s]" value="0"><label><input type="checkbox" name="wfcc_settings[%2$s]" value="1" %3$s> %4$s</label>%5$s</td></tr>',
+		esc_html($label),
+		esc_attr($key),
+		checked($checked, true, false),
+		esc_html__('Enabled', 'wfc-cart'),
+		'' === $description ? '' : '<p class="description">' . esc_html($description) . '</p>'
 	);
 }

@@ -34,5 +34,10 @@ function wfcc_get_capabilities() {
 		'wfcc_view_transactions',
 		'wfcc_retry_deliveries',
 		'wfcc_view_sensitive_data',
+		'wfcc_view_reports',
+		'wfcc_export_transactions',
+		'wfcc_import_operations',
+		'wfcc_manage_batches',
+		'wfcc_manage_receipts',
 	);
 }

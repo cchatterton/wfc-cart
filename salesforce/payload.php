@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('WFCC_SALESFORCE_PAYLOAD_VERSION', '1.0');
+define('WFCC_SALESFORCE_PAYLOAD_VERSION', '1.1');
 
 /**
  * Build the fixed payload without persisting duplicate donor data.
@@ -99,6 +99,7 @@ function wfcc_build_salesforce_payload($transaction_id) {
 			'giftType'        => isset($package['gift_type']) ? sanitize_text_field($package['gift_type']) : 'donation',
 			'recurrenceStart' => $mapped['recurrence_start'],
 		),
+		'lineItems'       => wfcc_get_transaction_line_items($transaction_id),
 		'stripe'          => array(
 			'customerId'              => sanitize_text_field(get_post_meta($transaction_id, 'wfcc_stripe_customer_id', true)),
 			'paymentMethodId'         => sanitize_text_field(get_post_meta($transaction_id, 'wfcc_stripe_payment_method_id', true)),

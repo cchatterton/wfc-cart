@@ -98,6 +98,18 @@ function wfcc_sanitize_transaction_key($transaction_key) {
 }
 
 /**
+ * Sanitise a Gravity Forms entry key, including sub-inputs such as 1.3.
+ *
+ * @param mixed $value Candidate entry key.
+ * @return string
+ */
+function wfcc_sanitize_gf_entry_key($value) {
+	$value = trim((string) $value);
+
+	return preg_match('/^\d+(?:\.\d+)?$/', $value) ? $value : '';
+}
+
+/**
  * Return a masked representation of a secret.
  *
  * @param string $secret Secret value.
@@ -110,4 +122,3 @@ function wfcc_mask_secret($secret) {
 
 	return str_repeat('•', 8) . substr($secret, -4);
 }
-

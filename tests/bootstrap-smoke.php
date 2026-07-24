@@ -10,6 +10,7 @@
 define('ABSPATH', __DIR__ . '/wordpress/');
 define('MINUTE_IN_SECONDS', 60);
 define('HOUR_IN_SECONDS', 3600);
+define('DAY_IN_SECONDS', 86400);
 
 function add_action() {}
 function add_filter() {}
@@ -95,6 +96,8 @@ $required_functions = array(
 	'wfcc_activate',
 	'wfcc_get_settings',
 	'wfcc_is_checkout_form',
+	'wfcc_build_operational_report',
+	'wfcc_create_transaction_receipt',
 );
 
 foreach ($required_functions as $function) {

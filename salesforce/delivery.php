@@ -139,6 +139,11 @@ function wfcc_deliver_salesforce_transaction($transaction_id) {
 		if (is_wp_error($payload)) {
 			$result = $payload;
 		} else {
+			update_post_meta(
+				$transaction_id,
+				'wfcc_salesforce_payload_version',
+				sanitize_text_field($payload['schemaVersion'] ?? WFCC_SALESFORCE_PAYLOAD_VERSION)
+			);
 			update_post_meta($transaction_id, 'wfcc_salesforce_payload_hash', hash('sha256', wp_json_encode($payload)));
 			$result = wfcc_salesforce_deliver_payload($payload);
 		}
