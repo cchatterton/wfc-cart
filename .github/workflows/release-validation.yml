@@ -24,6 +24,11 @@ jobs:
           php-version: "8.1"
           coverage: none
 
+      - name: Install validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ripgrep
+
       - name: Run release validation
         run: ./scripts/validate-release.sh
 
