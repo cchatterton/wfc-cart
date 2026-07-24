@@ -94,8 +94,9 @@ Run:
 
 It lints PHP, checks JavaScript syntax, runs all contract and static security
 tests, rebuilds both release ZIP copies, verifies their equality, and rejects
-development artifacts in the package. GitHub Actions runs the same command for
-pull requests, `main`, and version tags.
+development artifacts in the package. It also builds the ZIP twice and requires
+the checksums to match. GitHub Actions runs the same command for pull requests,
+`main`, and version tags.
 
 Automated validation does not replace external staging, security,
 accessibility, or pilot evidence.

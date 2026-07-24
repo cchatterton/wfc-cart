@@ -30,6 +30,13 @@ done
 "$REPOSITORY_DIR/scripts/build-plugin-zip.sh"
 
 cmp "$REPOSITORY_DIR/dist/wfc-cart.zip" "$REPOSITORY_DIR/wfc-cart.zip"
+first_package_checksum="$(shasum -a 256 "$REPOSITORY_DIR/dist/wfc-cart.zip" | awk '{print $1}')"
+"$REPOSITORY_DIR/scripts/build-plugin-zip.sh" >/dev/null
+second_package_checksum="$(shasum -a 256 "$REPOSITORY_DIR/dist/wfc-cart.zip" | awk '{print $1}')"
+if [[ "$first_package_checksum" != "$second_package_checksum" ]]; then
+	echo "Release ZIP must be byte-for-byte reproducible." >&2
+	exit 1
+fi
 
 if [[ "$(unzip -Z1 "$REPOSITORY_DIR/dist/wfc-cart.zip" | head -1)" != "wfc-cart/" ]]; then
 	echo "Release ZIP must use wfc-cart/ as its top-level directory." >&2
@@ -41,4 +48,4 @@ if unzip -Z1 "$REPOSITORY_DIR/dist/wfc-cart.zip" | rg -q '(^|/)(\\.git|node_modu
 	exit 1
 fi
 
-printf 'WFC Cart release validation passed: %s\n' "$(shasum -a 256 "$REPOSITORY_DIR/dist/wfc-cart.zip" | awk '{print $1}')"
+printf 'WFC Cart release validation passed: %s\n' "$second_package_checksum"

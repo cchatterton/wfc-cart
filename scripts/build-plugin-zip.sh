@@ -44,10 +44,11 @@ find "$PACKAGE_DIR" -name ".DS_Store" -delete
 find "$PACKAGE_DIR" -name "*.zip" -delete
 rm -f "$PACKAGE_DIR/scripts/build-plugin-zip.sh" "$PACKAGE_DIR/scripts/validate-release.sh"
 rm -rf "$PACKAGE_DIR/node_modules" "$PACKAGE_DIR/vendor"
+TZ=UTC find "$PACKAGE_DIR" -exec touch -t 200001010000 {} +
 
 (
 	cd "$DIST_DIR"
-	zip -qr "$PLUGIN_SLUG.zip" "$PLUGIN_SLUG"
+	LC_ALL=C find "$PLUGIN_SLUG" -print | LC_ALL=C TZ=UTC zip -q -X "$PLUGIN_SLUG.zip" -@
 )
 
 cp "$DIST_DIR/$PLUGIN_SLUG.zip" "$REPOSITORY_DIR/$PLUGIN_SLUG.zip"

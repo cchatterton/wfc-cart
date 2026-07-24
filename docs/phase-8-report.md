@@ -25,6 +25,8 @@ production release.
   handling.
 - Checksummed, privacy-minimised evidence export.
 - Phase 8 regression contracts and repeatable local/GitHub Actions validation.
+- Deterministic release ZIP generation with normalised archive metadata and a
+  two-build reproducibility assertion.
 - Release governance, evidence handling, pilot, rollback, and segregation-of-
   duties guidance.
 
