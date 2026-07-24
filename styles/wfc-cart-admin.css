@@ -30,7 +30,8 @@
 	text-transform: uppercase;
 }
 
-.wfcc-status--ok {
+.wfcc-status--ok,
+.wfcc-status--pass {
 	background: #d7f0db;
 	color: #005a16;
 }
@@ -40,9 +41,13 @@
 	color: #6e4b00;
 }
 
+.wfcc-status--blocking {
+	background: #f7d4d6;
+	color: #8a151b;
+}
+
 @media (min-width: 48rem) {
 	.wfcc-admin__cards {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
-

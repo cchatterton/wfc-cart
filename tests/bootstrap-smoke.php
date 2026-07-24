@@ -49,7 +49,88 @@ function wp_doing_ajax() {
 	return false;
 }
 function get_option($name, $default = false) {
-	return $default;
+	return array_key_exists($name, $GLOBALS['wfcc_test_options'] ?? array())
+		? $GLOBALS['wfcc_test_options'][$name]
+		: $default;
+}
+function add_option($name, $value) {
+	if (array_key_exists($name, $GLOBALS['wfcc_test_options'] ?? array())) {
+		return false;
+	}
+	$GLOBALS['wfcc_test_options'][$name] = $value;
+	return true;
+}
+function update_option($name, $value) {
+	$GLOBALS['wfcc_test_options'][$name] = $value;
+	return true;
+}
+function delete_option($name) {
+	unset($GLOBALS['wfcc_test_options'][$name]);
+	return true;
+}
+if (!class_exists('WFCC_Test_Role')) {
+	class WFCC_Test_Role {
+		public $capabilities = array();
+
+		public function add_cap($capability) {
+			$this->capabilities[$capability] = true;
+		}
+
+		public function remove_cap($capability) {
+			unset($this->capabilities[$capability]);
+		}
+	}
+}
+function get_role($role) {
+	if ('administrator' !== $role) {
+		return null;
+	}
+	if (empty($GLOBALS['wfcc_test_administrator'])) {
+		$GLOBALS['wfcc_test_administrator'] = new WFCC_Test_Role();
+	}
+	return $GLOBALS['wfcc_test_administrator'];
+}
+function is_multisite() {
+	return !empty($GLOBALS['wfcc_test_is_multisite']);
+}
+function get_sites($args = array()) {
+	$sites  = $GLOBALS['wfcc_test_site_ids'] ?? array();
+	$offset = isset($args['offset']) ? (int) $args['offset'] : 0;
+	$number = isset($args['number']) ? (int) $args['number'] : count($sites);
+	return array_slice($sites, $offset, $number);
+}
+function switch_to_blog($site_id) {
+	$GLOBALS['wfcc_test_blog_stack'][] = $GLOBALS['wfcc_test_current_blog'] ?? 1;
+	$GLOBALS['wfcc_test_current_blog'] = (int) $site_id;
+	return true;
+}
+function restore_current_blog() {
+	if (empty($GLOBALS['wfcc_test_blog_stack'])) {
+		return false;
+	}
+	$GLOBALS['wfcc_test_current_blog'] = array_pop($GLOBALS['wfcc_test_blog_stack']);
+	return true;
+}
+function wp_next_scheduled($hook) {
+	return $GLOBALS['wfcc_test_schedules'][$hook][0] ?? false;
+}
+function wp_schedule_event($timestamp, $recurrence, $hook) {
+	$GLOBALS['wfcc_test_schedules'][$hook][] = $timestamp;
+	return true;
+}
+function wp_unschedule_event($timestamp, $hook) {
+	if (empty($GLOBALS['wfcc_test_schedules'][$hook])) {
+		return false;
+	}
+	$GLOBALS['wfcc_test_schedules'][$hook] = array_values(
+		array_filter(
+			$GLOBALS['wfcc_test_schedules'][$hook],
+			function ($candidate) use ($timestamp) {
+				return $candidate !== $timestamp;
+			}
+		)
+	);
+	return true;
 }
 function wp_get_current_user() {
 	return (object) array(
@@ -98,6 +179,8 @@ $required_functions = array(
 	'wfcc_is_checkout_form',
 	'wfcc_build_operational_report',
 	'wfcc_create_transaction_receipt',
+	'wfcc_evaluate_readiness_context',
+	'wfcc_resolve_request_ip',
 );
 
 foreach ($required_functions as $function) {

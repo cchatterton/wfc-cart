@@ -89,7 +89,7 @@ function wfcc_render_reports_page() {
 			<section class="wfcc-admin__card"><h2><?php echo esc_html__('Batched', 'wfc-cart'); ?></h2><p class="wfcc-admin__metric"><?php echo esc_html(number_format_i18n($report['batched_count'])); ?></p></section>
 		</div>
 		<h2><?php echo esc_html__('Original transaction totals', 'wfc-cart'); ?></h2>
-		<table class="widefat striped wfcc-admin__table"><thead><tr><th><?php echo esc_html__('Currency', 'wfc-cart'); ?></th><th><?php echo esc_html__('Total', 'wfc-cart'); ?></th></tr></thead><tbody>
+		<table class="widefat striped wfcc-admin__table"><caption class="screen-reader-text"><?php echo esc_html__('Original transaction totals by currency', 'wfc-cart'); ?></caption><thead><tr><th><?php echo esc_html__('Currency', 'wfc-cart'); ?></th><th><?php echo esc_html__('Total', 'wfc-cart'); ?></th></tr></thead><tbody>
 		<?php if (!$report['currency_totals']) : ?>
 			<tr><td colspan="2"><?php echo esc_html__('No transactions in this period.', 'wfc-cart'); ?></td></tr>
 		<?php else : ?>
@@ -228,7 +228,7 @@ function wfcc_render_batches_page() {
 			<button class="button button-primary" type="submit"><?php echo esc_html__('Create and seal batch', 'wfc-cart'); ?></button>
 		</form>
 		<h2><?php echo esc_html__('Recent batches', 'wfc-cart'); ?></h2>
-		<table class="widefat striped wfcc-admin__table"><thead><tr><th><?php echo esc_html__('Batch', 'wfc-cart'); ?></th><th><?php echo esc_html__('Period', 'wfc-cart'); ?></th><th><?php echo esc_html__('Transactions', 'wfc-cart'); ?></th><th><?php echo esc_html__('Original totals', 'wfc-cart'); ?></th><th><?php echo esc_html__('Status', 'wfc-cart'); ?></th></tr></thead><tbody>
+		<table class="widefat striped wfcc-admin__table"><caption class="screen-reader-text"><?php echo esc_html__('Recent sealed transaction batches', 'wfc-cart'); ?></caption><thead><tr><th><?php echo esc_html__('Batch', 'wfc-cart'); ?></th><th><?php echo esc_html__('Period', 'wfc-cart'); ?></th><th><?php echo esc_html__('Transactions', 'wfc-cart'); ?></th><th><?php echo esc_html__('Original totals', 'wfc-cart'); ?></th><th><?php echo esc_html__('Status', 'wfc-cart'); ?></th></tr></thead><tbody>
 		<?php if (!$batches) : ?>
 			<tr><td colspan="5"><?php echo esc_html__('No batches created.', 'wfc-cart'); ?></td></tr>
 		<?php else : ?>
@@ -288,7 +288,7 @@ function wfcc_render_receipts_page() {
 			__('The receipt was sent.', 'wfc-cart')
 		);
 		?>
-		<table class="widefat striped wfcc-admin__table"><thead><tr><th><?php echo esc_html__('Receipt', 'wfc-cart'); ?></th><th><?php echo esc_html__('Transaction', 'wfc-cart'); ?></th><th><?php echo esc_html__('Amount', 'wfc-cart'); ?></th><th><?php echo esc_html__('Issued', 'wfc-cart'); ?></th><th><?php echo esc_html__('Delivery', 'wfc-cart'); ?></th><th><?php echo esc_html__('Action', 'wfc-cart'); ?></th></tr></thead><tbody>
+		<table class="widefat striped wfcc-admin__table"><caption class="screen-reader-text"><?php echo esc_html__('Issued WFC transaction receipts', 'wfc-cart'); ?></caption><thead><tr><th><?php echo esc_html__('Receipt', 'wfc-cart'); ?></th><th><?php echo esc_html__('Transaction', 'wfc-cart'); ?></th><th><?php echo esc_html__('Amount', 'wfc-cart'); ?></th><th><?php echo esc_html__('Issued', 'wfc-cart'); ?></th><th><?php echo esc_html__('Delivery', 'wfc-cart'); ?></th><th><?php echo esc_html__('Action', 'wfc-cart'); ?></th></tr></thead><tbody>
 		<?php if (!$transactions) : ?>
 			<tr><td colspan="6"><?php echo esc_html__('No receipts issued.', 'wfc-cart'); ?></td></tr>
 		<?php else : ?>

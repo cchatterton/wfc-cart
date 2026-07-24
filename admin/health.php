@@ -101,6 +101,7 @@ function wfcc_render_health_page() {
 	<div class="wrap wfcc-admin">
 		<h1><?php echo esc_html__('WFC Cart Health', 'wfc-cart'); ?></h1>
 		<table class="widefat striped wfcc-admin__table">
+			<caption class="screen-reader-text"><?php echo esc_html__('WFC Cart service health checks', 'wfc-cart'); ?></caption>
 			<thead><tr><th><?php echo esc_html__('Service', 'wfc-cart'); ?></th><th><?php echo esc_html__('Status', 'wfc-cart'); ?></th><th><?php echo esc_html__('Detail', 'wfc-cart'); ?></th></tr></thead>
 			<tbody>
 				<?php foreach (wfcc_get_health_checks() as $check) : ?>

@@ -206,6 +206,17 @@ function wfcc_validate_checkout_submission($result) {
 		return wfcc_checkout_validation_error($result, __('The payment package is no longer approved.', 'wfc-cart'));
 	}
 
+	$expected_amount = absint(get_post_meta($transaction_id, 'wfcc_amount', true));
+	$amount_field_id = isset($package['amount_field_id']) ? absint($package['amount_field_id']) : 0;
+	if ($amount_field_id > 0) {
+		$input_key     = 'input_' . $amount_field_id;
+		$posted_amount = isset($_POST[$input_key]) ? wp_unslash($_POST[$input_key]) : '';
+		$resolved      = wfcc_resolve_package_amount($package, $posted_amount);
+		if ($resolved !== $expected_amount) {
+			return wfcc_checkout_validation_error($result, __('The contribution amount changed after payment preparation. Please confirm the payment again.', 'wfc-cart'));
+		}
+	}
+
 	if (!empty($package['recurring']) || 'setup' === $package['mode']) {
 		$consent_field = isset($package['consent_field_id']) ? absint($package['consent_field_id']) : 0;
 		if (!$consent_field || !wfcc_posted_gf_field_has_value($consent_field)) {
@@ -220,7 +231,6 @@ function wfcc_validate_checkout_submission($result) {
 		return wfcc_checkout_validation_error($result, __('The payment could not be verified. Please try again.', 'wfc-cart'));
 	}
 
-	$expected_amount   = absint(get_post_meta($transaction_id, 'wfcc_amount', true));
 	$expected_currency = strtolower(get_post_meta($transaction_id, 'wfcc_currency', true));
 	if ('payment_intent' === $intent['object']) {
 		if ('succeeded' !== $intent['status']

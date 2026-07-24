@@ -41,6 +41,11 @@
 	min-block-size: 2.75rem;
 }
 
+.wfcc-checkout__submit :disabled {
+	cursor: wait;
+	opacity: 0.65;
+}
+
 .wfcc-checkout :focus-visible {
 	outline: 3px solid currentColor;
 	outline-offset: 3px;
@@ -51,6 +56,15 @@
 	opacity: 0.75;
 }
 
+@media (prefers-reduced-motion: reduce) {
+	.wfcc-checkout *,
+	.wfcc-checkout *::before,
+	.wfcc-checkout *::after {
+		scroll-behavior: auto !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
 @media (min-width: 48rem) {
 	.wfcc-checkout__fields {
 		display: grid;
@@ -58,4 +72,3 @@
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
-

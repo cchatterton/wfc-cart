@@ -33,6 +33,7 @@ function wfcc_register_admin_menu() {
 	add_submenu_page('wfcc', __('Batch Management', 'wfc-cart'), __('Batch Management', 'wfc-cart'), 'wfcc_manage_batches', 'wfcc-batches', 'wfcc_render_batches_page');
 	add_submenu_page('wfcc', __('Receipts', 'wfc-cart'), __('Receipts', 'wfc-cart'), 'wfcc_manage_receipts', 'wfcc-receipts', 'wfcc_render_receipts_page');
 	add_submenu_page('wfcc', __('Health', 'wfc-cart'), __('Health', 'wfc-cart'), 'wfcc_manage_settings', 'wfcc-health', 'wfcc_render_health_page');
+	add_submenu_page('wfcc', __('Production Readiness', 'wfc-cart'), __('Production Readiness', 'wfc-cart'), 'wfcc_manage_settings', 'wfcc-readiness', 'wfcc_render_readiness_page');
 	add_submenu_page('wfcc', __('Settings', 'wfc-cart'), __('Settings', 'wfc-cart'), 'wfcc_manage_settings', 'wfcc-settings', 'wfcc_render_settings_page');
 }
 
@@ -60,6 +61,9 @@ function wfcc_render_dashboard_page() {
 	$success_rate = $report['transaction_count'] > 0
 		? round(($succeeded / $report['transaction_count']) * 100, 1)
 		: 0;
+	$readiness = wfcc_summarize_readiness(
+		wfcc_evaluate_readiness_context(wfcc_get_readiness_context())
+	);
 	?>
 	<div class="wrap wfcc-admin">
 		<h1><?php echo esc_html__('WFC Cart', 'wfc-cart'); ?></h1>
@@ -79,6 +83,13 @@ function wfcc_render_dashboard_page() {
 			<section class="wfcc-admin__card">
 				<h2><?php echo esc_html__('30-day receipts', 'wfc-cart'); ?></h2>
 				<p class="wfcc-admin__metric"><?php echo esc_html(number_format_i18n($report['receipt_count'])); ?></p>
+			</section>
+			<section class="wfcc-admin__card">
+				<h2><?php echo esc_html__('Production readiness', 'wfc-cart'); ?></h2>
+				<p class="wfcc-admin__metric"><?php echo esc_html($readiness['status']); ?></p>
+				<?php if (current_user_can('wfcc_manage_settings')) : ?>
+					<p><a href="<?php echo esc_url(admin_url('admin.php?page=wfcc-readiness')); ?>"><?php echo esc_html__('View audit', 'wfc-cart'); ?></a></p>
+				<?php endif; ?>
 			</section>
 			<section class="wfcc-admin__card">
 				<h2><?php echo esc_html__('Version', 'wfc-cart'); ?></h2>

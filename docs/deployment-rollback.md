@@ -12,13 +12,16 @@
 
 ## Upgrade
 
-Install `wfc-cart.zip` from the immutable GitHub release. Schema 6:
+Install `wfc-cart.zip` from the immutable GitHub release. Schema 7:
 
 - preserves transactions, settings, entries, delivery state, and external
   records;
 - adds operational capabilities to administrators;
 - enables receipt-number generation for future successful checkouts;
 - leaves automatic receipt email disabled; and
+- adds an empty trusted-proxy allow-list;
+- records the previous and current schema versions in a privacy-safe upgrade
+  journal; and
 - does not backfill receipts, batches, line items, imports, or exports.
 
 After upgrade, visit **WFC Cart → Health** and run the checkout, Salesforce,
@@ -36,9 +39,10 @@ Rollback is a plugin-code operation, not a data deletion operation:
 6. Confirm its scheduled events and health checks.
 7. Re-run a test-mode checkout.
 
-WFC Cart preserves schema 6 metadata when older code is restored. Version 0.5.0
-ignores receipt, line-item, import-reference, and batch metadata that it does
-not understand. Do not delete that metadata during rollback.
+WFC Cart preserves schema 7 metadata when older code is restored. Versions
+0.5.0 and 0.6.0 ignore newer receipt, line-item, import-reference, batch,
+trusted-proxy, readiness, and upgrade-journal metadata they do not understand.
+Do not delete that metadata during rollback.
 
 If Salesforce has already accepted payload version `1.1`, downstream records
 remain authoritative and must not be deleted as part of a WordPress rollback.

@@ -8,6 +8,35 @@ if (!defined('ABSPATH')) {
 }
 
 add_action('rest_api_init', 'wfcc_register_rest_routes');
+add_filter('rest_post_dispatch', 'wfcc_harden_rest_response_headers', 10, 3);
+
+/**
+ * Prevent caching and MIME sniffing on all WFC REST responses, including
+ * errors generated before a callback returns.
+ *
+ * @param WP_HTTP_Response $response Response.
+ * @param WP_REST_Server   $server   REST server.
+ * @param WP_REST_Request  $request  Request.
+ * @return WP_HTTP_Response
+ */
+function wfcc_harden_rest_response_headers($response, $server, $request) {
+	unset($server);
+	$route = is_object($request) && method_exists($request, 'get_route')
+		? (string) $request->get_route()
+		: '';
+	if (0 !== strpos($route, '/wfc-cart/v1/')) {
+		return $response;
+	}
+
+	if (is_object($response) && method_exists($response, 'header')) {
+		$response->header('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+		$response->header('Pragma', 'no-cache');
+		$response->header('Expires', '0');
+		$response->header('X-Content-Type-Options', 'nosniff');
+	}
+
+	return $response;
+}
 
 /**
  * Register explicitly public, internally authenticated routes.
@@ -41,7 +70,7 @@ function wfcc_register_rest_routes() {
  * @return string
  */
 function wfcc_request_fingerprint() {
-	$address = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
+	$address = wfcc_resolve_request_ip();
 	$address = apply_filters('wfcc_rate_limit_identifier', $address);
 
 	return hash_hmac('sha256', (string) $address, wp_salt('auth'));
@@ -71,6 +100,10 @@ function wfcc_check_intent_rate_limit() {
  * @return WP_REST_Response|WP_Error
  */
 function wfcc_rest_create_intent($request) {
+	if (!wfcc_request_body_is_bounded($request->get_body(), 16384)) {
+		return new WP_Error('wfcc_checkout_request_too_large', __('The checkout request is too large.', 'wfc-cart'), array('status' => 413));
+	}
+
 	$limited = wfcc_check_intent_rate_limit();
 	if (is_wp_error($limited)) {
 		return $limited;
@@ -170,6 +203,9 @@ function wfcc_rest_intent_response($transaction_id, $intent = null) {
  */
 function wfcc_rest_stripe_webhook($request) {
 	$payload   = $request->get_body();
+	if (!wfcc_request_body_is_bounded($payload, 1048576)) {
+		return new WP_Error('wfcc_stripe_payload_too_large', __('The Stripe webhook payload is too large.', 'wfc-cart'), array('status' => 413));
+	}
 	$signature = $request->get_header('stripe-signature');
 	$secret    = wfcc_get_secret('stripe_webhook_secret', 'WFCC_STRIPE_WEBHOOK_SECRET', 'WFCC_STRIPE_WEBHOOK_SECRET');
 	$verified  = wfcc_verify_stripe_signature($payload, $signature, $secret);
