@@ -29,7 +29,6 @@ directories=(
 	"scripts"
 	"stripe"
 	"styles"
-	"templates"
 )
 
 for file in "${files[@]}"; do
