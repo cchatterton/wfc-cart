@@ -180,6 +180,7 @@ $required_functions = array(
 	'wfcc_build_operational_report',
 	'wfcc_create_transaction_receipt',
 	'wfcc_evaluate_readiness_context',
+	'wfcc_evaluate_release_governance',
 	'wfcc_resolve_request_ip',
 );
 

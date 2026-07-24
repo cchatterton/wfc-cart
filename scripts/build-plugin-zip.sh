@@ -42,7 +42,7 @@ done
 
 find "$PACKAGE_DIR" -name ".DS_Store" -delete
 find "$PACKAGE_DIR" -name "*.zip" -delete
-rm -f "$PACKAGE_DIR/scripts/build-plugin-zip.sh"
+rm -f "$PACKAGE_DIR/scripts/build-plugin-zip.sh" "$PACKAGE_DIR/scripts/validate-release.sh"
 rm -rf "$PACKAGE_DIR/node_modules" "$PACKAGE_DIR/vendor"
 
 (

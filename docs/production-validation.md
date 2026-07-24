@@ -1,6 +1,6 @@
 # Production validation
 
-WFC Cart 0.7.0 converts configuration and runtime prerequisites into an
+WFC Cart 0.8.0 converts configuration and runtime prerequisites into an
 executable readiness audit, then defines the external scenarios that still
 require staging evidence.
 
@@ -13,7 +13,7 @@ Blocking checks:
 - PHP 8.1 or later;
 - WordPress 6.4 or later;
 - WordPress recognises HTTPS;
-- WFC schema 7 completed;
+- WFC schema 8 completed;
 - Gravity Forms available;
 - Stripe publishable and secret keys configured;
 - Stripe webhook signing secret configured;
@@ -159,4 +159,22 @@ evidence for each scenario.
   bounded batch size.
 
 The executable audit is a prerequisite, not a substitute, for this staging
-matrix.
+matrix. Record the controlled evidence reference for the completed matrix under
+**WFC Cart → Production Readiness → Phase 8 release governance**. Do not paste
+credentials, payment data, donor data, access tokens, or raw integration
+payloads into a release decision.
+
+## Exit criteria
+
+The staging gate may be approved only when:
+
+- the saved technical audit is for the exact installed version and schema;
+- it contains no blocking findings;
+- every applicable scenario above has a dated result;
+- failed scenarios have a linked disposition and retest;
+- the evidence set contains no secrets or donor data; and
+- the rollback rehearsal has completed successfully.
+
+Warnings in the technical audit must be explicitly addressed in the staging
+evidence. They do not automatically block the gate, but the approving reviewer
+owns the documented risk decision.

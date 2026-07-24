@@ -64,6 +64,10 @@ function wfcc_render_dashboard_page() {
 	$readiness = wfcc_summarize_readiness(
 		wfcc_evaluate_readiness_context(wfcc_get_readiness_context())
 	);
+	$release = wfcc_evaluate_release_governance(
+		get_option(WFCC_RELEASE_GOVERNANCE_OPTION, array()),
+		get_option('wfcc_readiness_last_run', array())
+	);
 	?>
 	<div class="wrap wfcc-admin">
 		<h1><?php echo esc_html__('WFC Cart', 'wfc-cart'); ?></h1>
@@ -94,6 +98,11 @@ function wfcc_render_dashboard_page() {
 			<section class="wfcc-admin__card">
 				<h2><?php echo esc_html__('Version', 'wfc-cart'); ?></h2>
 				<p class="wfcc-admin__metric"><?php echo esc_html(WFCC_VERSION); ?></p>
+			</section>
+			<section class="wfcc-admin__card">
+				<h2><?php echo esc_html__('Release approval', 'wfc-cart'); ?></h2>
+				<p class="wfcc-admin__metric"><?php echo esc_html($release['status']); ?></p>
+				<p><?php echo esc_html(sprintf(__('%1$d of %2$d gates approved', 'wfc-cart'), $release['approved'], $release['total'])); ?></p>
 			</section>
 		</div>
 		<p><?php echo esc_html__('Configure and validate Stripe and Salesforce before enabling live WFC Cart checkout.', 'wfc-cart'); ?></p>

@@ -1,8 +1,8 @@
 # WFC Cart
 
 Author: AlphaSys
-Version: 0.7.0
-Status: Development
+Version: 0.8.0
+Status: Release candidate
 
 ## Purpose
 
@@ -14,9 +14,10 @@ Salesforce through server-to-server integration.
 ## Current phase
 
 WFC Cart now includes Stripe checkout, Salesforce delivery, operational
-workflows, and Phase 7 production-readiness controls. Runtime configuration,
-REST boundaries, proxy handling, scheduled processing, and site lifecycle can
-be evaluated from an executable administrator audit.
+workflows, production-readiness controls, and Phase 8 release governance.
+Runtime configuration can be audited and external staging, security,
+accessibility, pilot, and final approval evidence can be recorded against the
+exact plugin version.
 
 ## Key features
 
@@ -43,6 +44,11 @@ be evaluated from an executable administrator audit.
 - Trusted-proxy CIDR handling for per-client checkout rate limiting.
 - Multisite-aware network activation, deactivation, and new-site setup.
 - Executable production-readiness checks with a safe audit snapshot.
+- Ordered, version-bound release gates with independent-review attestations.
+- Append-only, hash-chained approval history and checksummed JSON evidence
+  export.
+- Automated pull-request, main-branch, and release-tag validation through
+  GitHub Actions.
 - Localised checkout states, focused errors, submit-state controls, input
   debouncing, and reduced-motion support.
 - Protected WordPress-native transaction, line-item, batch, and fund-code
@@ -107,11 +113,13 @@ The build creates `dist/wfc-cart.zip` and the matching root
 ## Checkout setup
 
 See `docs/stripe-setup.md`, `docs/gravity-forms-checkout.md`,
-`docs/salesforce-setup.md`, `docs/operations-guide.md`, and
-`docs/production-validation.md`. Complete the staging matrix before enabling
-live credentials.
+`docs/salesforce-setup.md`, `docs/operations-guide.md`,
+`docs/production-validation.md`, and `docs/release-governance.md`. Complete the
+staging matrix and every release gate before enabling general production use.
 
-## Next phase
+## Production approval
 
-Phase 8 is release readiness: external staging evidence, security and
-accessibility review, production pilot approval, and final release governance.
+Version 0.8.0 supplies the Phase 8 governance controls. It is not automatically
+approved for production: authorised reviewers must run the current technical
+audit, attach non-sensitive evidence references, complete the bounded pilot,
+and approve all five gates.

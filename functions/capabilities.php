@@ -39,5 +39,6 @@ function wfcc_get_capabilities() {
 		'wfcc_import_operations',
 		'wfcc_manage_batches',
 		'wfcc_manage_receipts',
+		'wfcc_approve_release',
 	);
 }

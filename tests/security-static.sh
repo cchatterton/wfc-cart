@@ -37,12 +37,23 @@ for action_file in \
 	"$REPOSITORY_DIR/operations/exports.php" \
 	"$REPOSITORY_DIR/operations/imports.php" \
 	"$REPOSITORY_DIR/operations/batches.php" \
-	"$REPOSITORY_DIR/functions/readiness.php"; do
+	"$REPOSITORY_DIR/functions/readiness.php" \
+	"$REPOSITORY_DIR/functions/release-governance.php"; do
 	if ! rg -q "current_user_can\\(" "$action_file" || ! rg -q "check_admin_referer\\(" "$action_file"; then
 		echo "Operational admin action lacks a capability or nonce check: $action_file" >&2
 		exit 1
 	fi
 done
+
+if ! rg -q "hash_equals" "$REPOSITORY_DIR/functions/release-governance.php"; then
+	echo "Release governance journal must use timing-safe hash validation." >&2
+	exit 1
+fi
+
+if ! rg -q "current_user_can\\('wfcc_approve_release'\\)" "$REPOSITORY_DIR/functions/release-governance.php"; then
+	echo "Release governance actions must use the dedicated approval capability." >&2
+	exit 1
+fi
 
 if rg -Pn "update_post_meta\\([^,]+,\\s*'[^']*(email|recipient)" "$REPOSITORY_DIR/operations" -g "*.php"; then
 	echo "Receipt recipient persistence detected." >&2
