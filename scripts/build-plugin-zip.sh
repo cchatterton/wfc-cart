@@ -23,6 +23,7 @@ directories=(
 	"checkout"
 	"functions"
 	"gravity-forms"
+	"operations"
 	"rest"
 	"salesforce"
 	"scripts"

@@ -1,6 +1,6 @@
 # Salesforce setup
 
-WFC Cart 0.5.0 sends completed transactions from WordPress to a
+WFC Cart 0.6.0 sends completed transactions from WordPress to a
 purpose-specific Apex REST endpoint. It does not expose Salesforce
 authentication or object selection to the browser.
 
@@ -165,6 +165,29 @@ The endpoint returns:
 Record references must be valid 15- or 18-character Salesforce IDs. An HTTP
 409 response is accepted only when the response explicitly marks the request
 as a duplicate and returns the matching `transactionKey`.
+
+## Payload version 1.1 line items
+
+Version `1.1` adds a bounded `lineItems` array to the fixed request. Each item
+contains only:
+
+```json
+{
+  "type": "event",
+  "sourceRef": "booking-101",
+  "label": "Community dinner",
+  "quantity": 2,
+  "unitAmount": 2500,
+  "taxAmount": 500,
+  "totalAmount": 5500,
+  "currency": "AUD",
+  "fundCode": "events-2026"
+}
+```
+
+Amounts remain in minor units within line items. Salesforce should accept an
+empty array and must not treat browser-provided object or field names as part of
+this contract.
 
 ## Operational behaviour
 

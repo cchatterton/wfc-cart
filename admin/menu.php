@@ -27,6 +27,11 @@ function wfcc_register_admin_menu() {
 	add_submenu_page('wfcc', __('Dashboard', 'wfc-cart'), __('Dashboard', 'wfc-cart'), 'wfcc_view_transactions', 'wfcc', 'wfcc_render_dashboard_page');
 	add_submenu_page('wfcc', __('Transactions', 'wfc-cart'), __('Transactions', 'wfc-cart'), 'wfcc_view_transactions', 'edit.php?post_type=transaction');
 	add_submenu_page('wfcc', __('Delivery Queue', 'wfc-cart'), __('Delivery Queue', 'wfc-cart'), 'wfcc_view_transactions', 'wfcc-delivery-queue', 'wfcc_render_delivery_queue_page');
+	add_submenu_page('wfcc', __('Reports', 'wfc-cart'), __('Reports', 'wfc-cart'), 'wfcc_view_reports', 'wfcc-reports', 'wfcc_render_reports_page');
+	add_submenu_page('wfcc', __('Exports', 'wfc-cart'), __('Exports', 'wfc-cart'), 'wfcc_export_transactions', 'wfcc-exports', 'wfcc_render_exports_page');
+	add_submenu_page('wfcc', __('Imports', 'wfc-cart'), __('Imports', 'wfc-cart'), 'wfcc_import_operations', 'wfcc-imports', 'wfcc_render_imports_page');
+	add_submenu_page('wfcc', __('Batch Management', 'wfc-cart'), __('Batch Management', 'wfc-cart'), 'wfcc_manage_batches', 'wfcc-batches', 'wfcc_render_batches_page');
+	add_submenu_page('wfcc', __('Receipts', 'wfc-cart'), __('Receipts', 'wfc-cart'), 'wfcc_manage_receipts', 'wfcc-receipts', 'wfcc_render_receipts_page');
 	add_submenu_page('wfcc', __('Health', 'wfc-cart'), __('Health', 'wfc-cart'), 'wfcc_manage_settings', 'wfcc-health', 'wfcc_render_health_page');
 	add_submenu_page('wfcc', __('Settings', 'wfc-cart'), __('Settings', 'wfc-cart'), 'wfcc_manage_settings', 'wfcc-settings', 'wfcc_render_settings_page');
 }
@@ -43,6 +48,18 @@ function wfcc_render_dashboard_page() {
 
 	$transaction_counts = wp_count_posts('transaction');
 	$transaction_total  = $transaction_counts ? array_sum(array_map('intval', (array) $transaction_counts)) : 0;
+	$range = array(
+		'from' => gmdate('Y-m-d', time() - (29 * DAY_IN_SECONDS)),
+		'to'   => gmdate('Y-m-d'),
+	);
+	$report = wfcc_build_operational_report(wfcc_get_transaction_ids_for_report($range, 5000));
+	$succeeded = 0;
+	foreach (array('succeeded', 'partially_refunded', 'refunded', 'disputed') as $successful_state) {
+		$succeeded += absint($report['payment_states'][$successful_state] ?? 0);
+	}
+	$success_rate = $report['transaction_count'] > 0
+		? round(($succeeded / $report['transaction_count']) * 100, 1)
+		: 0;
 	?>
 	<div class="wrap wfcc-admin">
 		<h1><?php echo esc_html__('WFC Cart', 'wfc-cart'); ?></h1>
@@ -54,6 +71,14 @@ function wfcc_render_dashboard_page() {
 			<section class="wfcc-admin__card">
 				<h2><?php echo esc_html__('Delivery queue', 'wfc-cart'); ?></h2>
 				<p class="wfcc-admin__metric"><?php echo esc_html(number_format_i18n(wfcc_count_pending_deliveries())); ?></p>
+			</section>
+			<section class="wfcc-admin__card">
+				<h2><?php echo esc_html__('30-day payment success', 'wfc-cart'); ?></h2>
+				<p class="wfcc-admin__metric"><?php echo esc_html(number_format_i18n($success_rate, 1) . '%'); ?></p>
+			</section>
+			<section class="wfcc-admin__card">
+				<h2><?php echo esc_html__('30-day receipts', 'wfc-cart'); ?></h2>
+				<p class="wfcc-admin__metric"><?php echo esc_html(number_format_i18n($report['receipt_count'])); ?></p>
 			</section>
 			<section class="wfcc-admin__card">
 				<h2><?php echo esc_html__('Version', 'wfc-cart'); ?></h2>

@@ -2,6 +2,24 @@
 
 All notable changes to WFC Cart are recorded here.
 
+## 0.6.0 - 2026-07-24
+
+- Added fixed, idempotent transaction line items for donation, product, event,
+  shipping, fee, and adjustment sources.
+- Added optional line items to Salesforce payload contract version `1.1`.
+- Added deterministic receipt records, optional plain-text receipt email,
+  manual resend controls, and privacy-minimised delivery metadata.
+- Added bounded operational reporting with payment, Salesforce, receipt, batch,
+  and per-currency original-total metrics.
+- Added formula-safe CSV exports that exclude donor details and reusable
+  payment identifiers.
+- Added validation-first operational metadata imports that cannot create
+  transactions or alter payment amounts or states.
+- Added immutable, stale-lock-protected transaction batch creation with
+  per-currency totals.
+- Added dedicated operational capabilities, scheduled-processing health,
+  Phase 6 contract tests, and deployment/rollback documentation.
+
 ## 0.5.0 - 2026-07-24
 
 - Added Salesforce External Client App OAuth client-credentials

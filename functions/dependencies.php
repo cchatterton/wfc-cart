@@ -21,7 +21,7 @@ function wfcc_dependency_notices() {
 
 	if (!class_exists('GFForms')) {
 		echo '<div class="notice notice-warning"><p>';
-		echo esc_html__('WFC Cart requires Gravity Forms for donation and checkout forms. Record and migration tools remain available.', 'wfc-cart');
+		echo esc_html__('WFC Cart requires Gravity Forms for donation and checkout forms. Operational records and reporting remain available.', 'wfc-cart');
 		echo '</p></div>';
 	}
 

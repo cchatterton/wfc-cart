@@ -82,6 +82,18 @@ function wfcc_maybe_upgrade_schema() {
 		wfcc_schedule_delivery_queue(true);
 	}
 
+	if (version_compare($installed_version, '6', '<')) {
+		$settings += array(
+			'receipt_generation_enabled' => true,
+			'receipt_email_enabled'      => false,
+			'receipt_number_prefix'      => 'WFC',
+			'receipt_email_field_id'     => '',
+			'receipt_email_subject'      => __('Your contribution receipt {receipt_number}', 'wfc-cart'),
+		);
+		update_option('wfcc_settings', $settings, false);
+		wfcc_add_capabilities();
+	}
+
 	update_option('wfcc_schema_version', WFCC_SCHEMA_VERSION, false);
 }
 
@@ -105,6 +117,11 @@ function wfcc_activate() {
 				'salesforce_field_map'    => array(),
 				'salesforce_required_fields' => array('email', 'last_name'),
 				'delivery_retry_limit'    => 8,
+				'receipt_generation_enabled' => true,
+				'receipt_email_enabled'  => false,
+				'receipt_number_prefix'  => 'WFC',
+				'receipt_email_field_id' => '',
+				'receipt_email_subject'  => __('Your contribution receipt {receipt_number}', 'wfc-cart'),
 			),
 			'',
 			false

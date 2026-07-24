@@ -1,7 +1,7 @@
 # WFC Cart
 
 Author: AlphaSys
-Version: 0.5.0
+Version: 0.6.0
 Status: Development
 
 ## Purpose
@@ -13,10 +13,10 @@ Salesforce through server-to-server integration.
 
 ## Current phase
 
-WFC Cart now includes the Phase 4 Stripe checkout and Phase 5 Salesforce
-delivery pipeline. Completed payments are queued for server-to-server delivery
-through a fixed, versioned Apex REST contract with controlled field mapping,
-idempotency, retries, and reconciliation.
+WFC Cart now includes Stripe checkout, Salesforce delivery, and Phase 6
+operational workflows. Protected transaction summaries can be reported,
+exported, annotated through a validation-first import, receipted, and sealed
+into immutable operational batches.
 
 ## Key features
 
@@ -32,6 +32,13 @@ idempotency, retries, and reconciliation.
 - Controlled Gravity Forms mapping into approved WFC payload targets.
 - Persistent delivery state, bounded retries, manual recovery, and Stripe-state
   reconciliation.
+- Fixed, idempotent transaction line items for donations, products, events,
+  shipping, fees, and adjustments.
+- Deterministic receipt records with optional plain-text email delivery.
+- Bounded operational reports and privacy-minimised, formula-safe CSV exports.
+- Validation-first metadata imports that cannot create transactions or change
+  financial state.
+- Immutable transaction batches with per-currency original totals.
 - Protected WordPress-native transaction, line-item, batch, and fund-code
   records.
 - Direct-access protection across packaged PHP modules.
@@ -46,8 +53,8 @@ idempotency, retries, and reconciliation.
 - WordPress 6.4 or later.
 - PHP 8.1 or later.
 - Gravity Forms for donation and checkout presentation.
-- WooCommerce and supported event integrations when their WFC modules are
-  implemented and enabled.
+- Optional server-side adapters may add product, event, or shipping line items
+  through the fixed WFC line-item contract.
 
 ## Folder structure
 
@@ -61,6 +68,8 @@ idempotency, retries, and reconciliation.
 - `rest/`: public intent and webhook routes with internal security controls.
 - `salesforce/`: authentication, controlled mapping, fixed payload, delivery
   outbox, retries, and reconciliation.
+- `operations/`: line items, receipts, reporting, CSV import/export, and
+  immutable batches.
 - `scripts/` and `styles/`: scoped WFC assets.
 - `docs/`: baseline, decisions, phase reports, and future setup guides.
 
@@ -91,11 +100,12 @@ The build creates `dist/wfc-cart.zip` and the matching root
 
 ## Checkout setup
 
-See `docs/stripe-setup.md`, `docs/gravity-forms-checkout.md`, and
-`docs/salesforce-setup.md`. Complete the staging matrix before enabling live
-credentials.
+See `docs/stripe-setup.md`, `docs/gravity-forms-checkout.md`,
+`docs/salesforce-setup.md`, and `docs/operations-guide.md`. Complete the staging
+matrix before enabling live credentials.
 
 ## Next phase
 
-Phase 6 will focus on WFC-native operational completeness and deployment
-hardening without introducing dependencies on another cart or CRM plugin.
+Phase 7 will validate the complete WFC-native workflow under production-like
+accessibility, performance, caching, multisite, upgrade, and rollback
+conditions.

@@ -32,6 +32,27 @@ if ! rg -q "'redirection' => 0" "$REPOSITORY_DIR/salesforce/authentication.php" 
 	exit 1
 fi
 
+for action_file in \
+	"$REPOSITORY_DIR/operations/receipts.php" \
+	"$REPOSITORY_DIR/operations/exports.php" \
+	"$REPOSITORY_DIR/operations/imports.php" \
+	"$REPOSITORY_DIR/operations/batches.php"; do
+	if ! rg -q "current_user_can\\(" "$action_file" || ! rg -q "check_admin_referer\\(" "$action_file"; then
+		echo "Operational admin action lacks a capability or nonce check: $action_file" >&2
+		exit 1
+	fi
+done
+
+if rg -Pn "update_post_meta\\([^,]+,\\s*'[^']*(email|recipient)" "$REPOSITORY_DIR/operations" -g "*.php"; then
+	echo "Receipt recipient persistence detected." >&2
+	exit 1
+fi
+
+if rg -n "'(email|payment_method_id|stripe_customer_id)'" "$REPOSITORY_DIR/operations/exports.php"; then
+	echo "Sensitive field detected in operational export." >&2
+	exit 1
+fi
+
 public_routes="$(rg -c "'permission_callback' => '__return_true'" "$REPOSITORY_DIR/rest/routes.php" || true)"
 if [[ "$public_routes" != "2" ]]; then
 	echo "Expected exactly two explicitly public REST routes." >&2

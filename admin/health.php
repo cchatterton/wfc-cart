@@ -28,6 +28,22 @@ function wfcc_get_health_checks() {
 			(string) $salesforce_diagnostic['checked_at']
 		);
 	}
+	$receipt_email_enabled = (bool) wfcc_get_setting('receipt_email_enabled', false);
+	$receipt_field_id      = wfcc_sanitize_gf_entry_key(wfcc_get_setting('receipt_email_field_id', ''));
+	$receipt_status        = !$receipt_email_enabled || '' !== $receipt_field_id ? 'ok' : 'warning';
+	$receipt_detail        = $receipt_email_enabled
+		? ('' !== $receipt_field_id
+			? __('Automatic email enabled with a configured Gravity Forms field', 'wfc-cart')
+			: __('Automatic email is enabled but its Gravity Forms field is missing', 'wfc-cart'))
+		: __('Receipt records enabled; automatic email disabled', 'wfc-cart');
+	$queue_next = wp_next_scheduled('wfcc_process_delivery_queue');
+	$cron_disabled = defined('DISABLE_WP_CRON') && DISABLE_WP_CRON;
+	$cron_status = $queue_next && !$cron_disabled ? 'ok' : 'warning';
+	$cron_detail = $cron_disabled
+		? __('WP-Cron is disabled; an external runner must invoke wp-cron.php.', 'wfc-cart')
+		: ($queue_next
+			? sprintf(__('Delivery queue scheduled for %s UTC', 'wfc-cart'), gmdate('c', $queue_next))
+			: __('Delivery queue schedule is missing; reactivate the plugin to restore it.', 'wfc-cart'));
 
 	return array(
 		'gravity_forms' => array(
@@ -58,6 +74,16 @@ function wfcc_get_health_checks() {
 			'detail' => wfcc_get_checkout_packages()
 				? sprintf(__('%d configured', 'wfc-cart'), count(wfcc_get_checkout_packages()))
 				: __('None configured', 'wfc-cart'),
+		),
+		'receipts' => array(
+			'label'  => __('Receipts', 'wfc-cart'),
+			'status' => $receipt_status,
+			'detail' => $receipt_detail,
+		),
+		'cron' => array(
+			'label'  => __('Scheduled processing', 'wfc-cart'),
+			'status' => $cron_status,
+			'detail' => $cron_detail,
 		),
 	);
 }

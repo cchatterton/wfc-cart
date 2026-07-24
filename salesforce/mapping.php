@@ -33,18 +33,6 @@ function wfcc_salesforce_mapping_targets() {
 }
 
 /**
- * Sanitise a Gravity Forms entry key, including sub-inputs such as 1.3.
- *
- * @param mixed $value Candidate entry key.
- * @return string
- */
-function wfcc_sanitize_gf_entry_key($value) {
-	$value = trim((string) $value);
-
-	return preg_match('/^\d+(?:\.\d+)?$/', $value) ? $value : '';
-}
-
-/**
  * Sanitise one field or constant mapping rule.
  *
  * @param mixed $candidate Rule.
