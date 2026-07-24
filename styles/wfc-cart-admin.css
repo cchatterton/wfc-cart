@@ -1,0 +1,48 @@
+.wfcc-admin__cards {
+	display: grid;
+	gap: 1rem;
+	margin-block: 1rem;
+}
+
+.wfcc-admin__card {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	padding: 1rem;
+}
+
+.wfcc-admin__metric {
+	font-size: 2rem;
+	font-weight: 600;
+	line-height: 1;
+	margin-block-end: 0;
+}
+
+.wfcc-admin__table {
+	margin-block: 1rem;
+}
+
+.wfcc-status {
+	border-radius: 999px;
+	display: inline-block;
+	font-size: 0.75rem;
+	font-weight: 600;
+	padding: 0.2rem 0.6rem;
+	text-transform: uppercase;
+}
+
+.wfcc-status--ok {
+	background: #d7f0db;
+	color: #005a16;
+}
+
+.wfcc-status--warning {
+	background: #fcf0c7;
+	color: #6e4b00;
+}
+
+@media (min-width: 48rem) {
+	.wfcc-admin__cards {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+

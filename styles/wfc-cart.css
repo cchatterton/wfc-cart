@@ -1,0 +1,61 @@
+.wfcc-checkout {
+	--wfcc-font-family: inherit;
+	--wfcc-text-color: inherit;
+	--wfcc-background: transparent;
+	--wfcc-border-color: currentColor;
+	--wfcc-border-radius: 0.25rem;
+	--wfcc-spacing: 1rem;
+
+	box-sizing: border-box;
+	color: var(--wfcc-text-color);
+	font-family: var(--wfcc-font-family);
+}
+
+.wfcc-checkout *,
+.wfcc-checkout *::before,
+.wfcc-checkout *::after {
+	box-sizing: inherit;
+}
+
+.wfcc-checkout__section + .wfcc-checkout__section {
+	margin-block-start: var(--wfcc-spacing);
+}
+
+.wfcc-checkout__field {
+	margin-block-end: var(--wfcc-spacing);
+}
+
+.wfcc-checkout__error {
+	color: #b32d2e;
+	font-weight: 600;
+}
+
+.wfcc-checkout__payment {
+	background: var(--wfcc-background);
+	border: 1px solid var(--wfcc-border-color);
+	border-radius: var(--wfcc-border-radius);
+	padding: var(--wfcc-spacing);
+}
+
+.wfcc-checkout__submit {
+	min-block-size: 2.75rem;
+}
+
+.wfcc-checkout :focus-visible {
+	outline: 3px solid currentColor;
+	outline-offset: 3px;
+}
+
+.wfcc-checkout[aria-busy="true"] {
+	cursor: progress;
+	opacity: 0.75;
+}
+
+@media (min-width: 48rem) {
+	.wfcc-checkout__fields {
+		display: grid;
+		gap: var(--wfcc-spacing);
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
