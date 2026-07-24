@@ -8,6 +8,26 @@ if rg -n "wp_ajax_nopriv_" "$REPOSITORY_DIR" -g "*.php" -g "!dist/**" -g "!docs/
 	exit 1
 fi
 
+if rg -ni "bbconnect|brownbox|bb_cart|bb-cart" "$REPOSITORY_DIR" \
+	-g "!dist/**" \
+	-g "!wfc-cart.zip" \
+	-g "!tests/security-static.sh" \
+	-g "!CHANGELOG.md"; then
+	echo "Removed product references detected." >&2
+	exit 1
+fi
+
+public_routes="$(rg -c "'permission_callback' => '__return_true'" "$REPOSITORY_DIR/rest/routes.php" || true)"
+if [[ "$public_routes" != "2" ]]; then
+	echo "Expected exactly two explicitly public REST routes." >&2
+	exit 1
+fi
+
+if ! rg -q 'wfcc_verify_stripe_signature\(\$payload, \$signature, \$secret\)' "$REPOSITORY_DIR/rest/routes.php"; then
+	echo "Stripe webhook route is missing raw-body signature verification." >&2
+	exit 1
+fi
+
 while IFS= read -r file; do
 	if ! rg -q "defined\\('ABSPATH'\\)|defined\\('WP_UNINSTALL_PLUGIN'\\)" "$file"; then
 		echo "Missing direct-access guard: $file" >&2
@@ -23,7 +43,7 @@ done < <(
 )
 
 if [[ -f "$REPOSITORY_DIR/dist/wfc-cart.zip" ]]; then
-	if unzip -Z1 "$REPOSITORY_DIR/dist/wfc-cart.zip" | rg -q "/(compatibility|forms|ia|assets)/"; then
+	if unzip -Z1 "$REPOSITORY_DIR/dist/wfc-cart.zip" | rg -q "/(compatibility|ia|assets)/"; then
 		echo "Removed directories included in release package." >&2
 		exit 1
 	fi

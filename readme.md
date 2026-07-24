@@ -1,7 +1,7 @@
 # WFC Cart
 
 Author: AlphaSys  
-Version: 0.3.0
+Version: 0.4.0
 Status: Development
 
 ## Purpose
@@ -13,16 +13,20 @@ Salesforce through server-to-server integration.
 
 ## Current phase
 
-WFC Cart now has a fully independent runtime, data model, administration area,
-settings, Gravity Forms roles, assets, and release process. Stripe payment and
-Salesforce delivery remain under development and must be integration-tested
-before live checkout is enabled.
+WFC Cart now has an independent runtime and Phase 4 Stripe checkout. Payment
+Element, PaymentIntent, SetupIntent, recurring first-payment preparation,
+verified webhooks, idempotency, and payment reconciliation are implemented.
+Salesforce delivery remains the next development phase.
 
 ## Key features
 
 - WFC-native settings, capabilities, dashboard, health, and delivery queue
   screens.
 - WFC-prefixed Gravity Forms cart and checkout roles.
+- Stripe Payment Element fields; card data is sent directly to Stripe.
+- Server-approved checkout packages and bounded donor-entered amounts.
+- PaymentIntent and SetupIntent processing with recurring Customer setup.
+- Verified, deduplicated webhooks and guarded transaction-state transitions.
 - Protected WordPress-native transaction, line-item, batch, and fund-code
   records.
 - Direct-access protection across packaged PHP modules.
@@ -47,8 +51,10 @@ before live checkout is enabled.
   and GitHub updater.
 - `gravity-forms/`: WFC Cart form roles and Gravity Forms integration.
 - `admin/`: WFC-native administration screens.
-- `checkout/`, `stripe/`, `salesforce/`, and `rest/`: reserved for approved
-  phase-specific modules.
+- `checkout/`: checkout packages and protected transaction state.
+- `stripe/`: fixed Stripe API client, intent orchestration, and webhooks.
+- `rest/`: public intent and webhook routes with internal security controls.
+- `salesforce/`: reserved for Phase 5 server-to-server delivery.
 - `scripts/` and `styles/`: scoped WFC assets.
 - `docs/`: baseline, decisions, phase reports, and future setup guides.
 
@@ -74,9 +80,12 @@ Run:
 The build creates `dist/wfc-cart.zip` and the matching root
 `wfc-cart.zip`. Both contain `wfc-cart/` as the top-level plugin folder.
 
-## Future considerations
+## Checkout setup
 
-The next phase adds Stripe PaymentIntent/SetupIntent checkout, verified
-webhooks, idempotency, and payment-state reconciliation. Later phases add the
-Salesforce OAuth client, fixed payload, persistent delivery/retry processing,
-and representative integration testing.
+See `docs/stripe-setup.md` and `docs/gravity-forms-checkout.md`. Complete the
+test-mode staging matrix before enabling live keys.
+
+## Next phase
+
+Phase 5 adds the Salesforce OAuth client, fixed payload, persistent
+delivery/retry processing, reconciliation, and operational integration tests.

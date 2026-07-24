@@ -21,8 +21,10 @@ function wfcc_get_health_checks() {
 		),
 		'stripe' => array(
 			'label'  => __('Stripe', 'wfc-cart'),
-			'status' => wfcc_get_secret('stripe_secret_key', 'WFCC_STRIPE_SECRET_KEY', 'WFCC_STRIPE_SECRET_KEY') ? 'ok' : 'warning',
-			'detail' => wfcc_get_secret('stripe_secret_key', 'WFCC_STRIPE_SECRET_KEY', 'WFCC_STRIPE_SECRET_KEY') ? __('Secret configured', 'wfc-cart') : __('Not configured', 'wfc-cart'),
+			'status' => wfcc_get_stripe_publishable_key() && wfcc_get_secret('stripe_secret_key', 'WFCC_STRIPE_SECRET_KEY', 'WFCC_STRIPE_SECRET_KEY') ? 'ok' : 'warning',
+			'detail' => wfcc_get_stripe_publishable_key() && wfcc_get_secret('stripe_secret_key', 'WFCC_STRIPE_SECRET_KEY', 'WFCC_STRIPE_SECRET_KEY')
+				? __('Publishable and secret keys configured', 'wfc-cart')
+				: __('Publishable or secret key missing', 'wfc-cart'),
 		),
 		'salesforce' => array(
 			'label'  => __('Salesforce', 'wfc-cart'),
@@ -33,6 +35,13 @@ function wfcc_get_health_checks() {
 			'label'  => __('Stripe webhook signature', 'wfc-cart'),
 			'status' => wfcc_get_secret('stripe_webhook_secret', 'WFCC_STRIPE_WEBHOOK_SECRET', 'WFCC_STRIPE_WEBHOOK_SECRET') ? 'ok' : 'warning',
 			'detail' => wfcc_get_secret('stripe_webhook_secret', 'WFCC_STRIPE_WEBHOOK_SECRET', 'WFCC_STRIPE_WEBHOOK_SECRET') ? __('Signing secret configured', 'wfc-cart') : __('Not configured', 'wfc-cart'),
+		),
+		'checkout_packages' => array(
+			'label'  => __('Checkout packages', 'wfc-cart'),
+			'status' => wfcc_get_checkout_packages() ? 'ok' : 'warning',
+			'detail' => wfcc_get_checkout_packages()
+				? sprintf(__('%d configured', 'wfc-cart'), count(wfcc_get_checkout_packages()))
+				: __('None configured', 'wfc-cart'),
 		),
 	);
 }
@@ -64,4 +73,3 @@ function wfcc_render_health_page() {
 	</div>
 	<?php
 }
-

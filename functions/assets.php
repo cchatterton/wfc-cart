@@ -16,6 +16,13 @@ add_action('admin_enqueue_scripts', 'wfcc_register_admin_assets');
  * @return void
  */
 function wfcc_register_frontend_assets() {
+	wp_register_script(
+		'wfcc-stripe',
+		'https://js.stripe.com/v3/',
+		array(),
+		null,
+		true
+	);
 	wp_register_style(
 		'wfcc-checkout',
 		WFCC_PLUGIN_URL . 'styles/wfc-cart.css',
@@ -25,7 +32,7 @@ function wfcc_register_frontend_assets() {
 	wp_register_script(
 		'wfcc-checkout',
 		WFCC_PLUGIN_URL . 'scripts/wfc-cart-checkout.js',
-		array(),
+		array('wfcc-stripe'),
 		WFCC_VERSION,
 		true
 	);

@@ -25,7 +25,7 @@ function wfcc_dependency_notices() {
 		echo '</p></div>';
 	}
 
-	if (!wfcc_get_setting('stripe_publishable_key') || !wfcc_get_secret('stripe_secret_key', 'WFCC_STRIPE_SECRET_KEY', 'WFCC_STRIPE_SECRET_KEY')) {
+	if (!wfcc_get_stripe_publishable_key() || !wfcc_get_secret('stripe_secret_key', 'WFCC_STRIPE_SECRET_KEY', 'WFCC_STRIPE_SECRET_KEY')) {
 		echo '<div class="notice notice-warning"><p>';
 		echo esc_html__('WFC Cart payments are unavailable until Stripe is configured. Non-tokenised card fields remain disabled.', 'wfc-cart');
 		echo '</p></div>';
