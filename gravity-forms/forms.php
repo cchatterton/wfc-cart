@@ -20,6 +20,7 @@ add_filter('gform_pre_form_settings_save', 'wfcc_save_gravity_forms_settings');
 function wfcc_add_gravity_forms_settings($settings, $form) {
 	$cart_enabled     = !empty($form['wfcc_cart_enabled']);
 	$checkout_enabled = !empty($form['wfcc_checkout_enabled']);
+	$default_package  = isset($form['wfcc_default_package']) ? sanitize_key($form['wfcc_default_package']) : '';
 
 	$settings[__('WFC Cart', 'wfc-cart')]['wfcc_form_roles'] = sprintf(
 		'<tr><th scope="row">%1$s</th><td>'
@@ -34,6 +35,14 @@ function wfcc_add_gravity_forms_settings($settings, $form) {
 		esc_html__('Use as a WFC Cart checkout form', 'wfc-cart'),
 		esc_html__('Payment fields are supplied by WFC Cart and Stripe. Do not add a standard card field.', 'wfc-cart')
 	);
+	$settings[__('WFC Cart', 'wfc-cart')]['wfcc_checkout_package'] = sprintf(
+		'<tr><th scope="row"><label for="wfcc_default_package">%1$s</label></th>'
+		. '<td><input class="regular-text" type="text" id="wfcc_default_package" name="wfcc_default_package" value="%2$s">'
+		. '<p class="description">%3$s</p></td></tr>',
+		esc_html__('Default checkout package', 'wfc-cart'),
+		esc_attr($default_package),
+		esc_html__('Required for checkout forms. The package must be configured in WFC Cart settings.', 'wfc-cart')
+	);
 
 	return $settings;
 }
@@ -47,6 +56,9 @@ function wfcc_add_gravity_forms_settings($settings, $form) {
 function wfcc_save_gravity_forms_settings($form) {
 	$form['wfcc_cart_enabled']     = isset($_POST['wfcc_cart_enabled']) ? 1 : 0;
 	$form['wfcc_checkout_enabled'] = isset($_POST['wfcc_checkout_enabled']) ? 1 : 0;
+	$form['wfcc_default_package']  = isset($_POST['wfcc_default_package'])
+		? sanitize_key(wp_unslash($_POST['wfcc_default_package']))
+		: '';
 
 	return $form;
 }
@@ -78,4 +90,3 @@ function wfcc_is_cart_form($form) {
 
 	return is_array($form) && !empty($form['wfcc_cart_enabled']);
 }
-

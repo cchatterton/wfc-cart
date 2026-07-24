@@ -76,6 +76,15 @@ function wfcc_sanitize_settings($input) {
 		$output['approved_redirect_hosts'] = array_values(array_unique($hosts));
 	}
 
+	if (array_key_exists('checkout_packages_json', $input)) {
+		$packages = wfcc_sanitize_checkout_packages(wp_unslash($input['checkout_packages_json']));
+		if (is_wp_error($packages)) {
+			add_settings_error('wfcc_settings', 'wfcc_invalid_packages', $packages->get_error_message(), 'error');
+		} else {
+			$output['checkout_packages'] = $packages;
+		}
+	}
+
 	return $output;
 }
 
@@ -156,6 +165,8 @@ function wfcc_render_settings_fields($tab, $settings) {
 			wfcc_settings_text_row('stripe_publishable_key', __('Publishable key', 'wfc-cart'), isset($settings['stripe_publishable_key']) ? $settings['stripe_publishable_key'] : '');
 			wfcc_settings_secret_row('stripe_secret_key', __('Secret key', 'wfc-cart'), wfcc_get_secret('stripe_secret_key', 'WFCC_STRIPE_SECRET_KEY', 'WFCC_STRIPE_SECRET_KEY'));
 			wfcc_settings_secret_row('stripe_webhook_secret', __('Webhook signing secret', 'wfc-cart'), wfcc_get_secret('stripe_webhook_secret', 'WFCC_STRIPE_WEBHOOK_SECRET', 'WFCC_STRIPE_WEBHOOK_SECRET'));
+			echo '<tr><th scope="row">' . esc_html__('Webhook endpoint', 'wfc-cart') . '</th><td><code>' . esc_html(rest_url('wfc-cart/v1/stripe/webhook')) . '</code>';
+			echo '<p class="description">' . esc_html__('Register this exact endpoint in Stripe and copy its signing secret above.', 'wfc-cart') . '</p></td></tr>';
 			break;
 		case 'salesforce':
 			wfcc_settings_text_row('salesforce_login_url', __('Login URL', 'wfc-cart'), isset($settings['salesforce_login_url']) ? $settings['salesforce_login_url'] : 'https://login.salesforce.com');
@@ -170,6 +181,12 @@ function wfcc_render_settings_fields($tab, $settings) {
 			echo '<tr><th scope="row"><label for="wfcc-approved-redirect-hosts">' . esc_html__('Approved external redirect hosts', 'wfc-cart') . '</label></th>';
 			echo '<td><textarea class="large-text code" rows="6" id="wfcc-approved-redirect-hosts" name="wfcc_settings[approved_redirect_hosts]">' . esc_textarea($hosts) . '</textarea>';
 			echo '<p class="description">' . esc_html__('One hostname per line. This site is always approved.', 'wfc-cart') . '</p></td></tr>';
+			$packages = isset($settings['checkout_packages']) && is_array($settings['checkout_packages'])
+				? wp_json_encode($settings['checkout_packages'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+				: '{}';
+			echo '<tr><th scope="row"><label for="wfcc-checkout-packages">' . esc_html__('Checkout packages', 'wfc-cart') . '</label></th>';
+			echo '<td><textarea class="large-text code" rows="24" id="wfcc-checkout-packages" name="wfcc_settings[checkout_packages_json]">' . esc_textarea($packages) . '</textarea>';
+			echo '<p class="description">' . esc_html__('JSON object keyed by opaque package ID. Monetary amounts use Stripe minor units (5000 = AUD 50.00). Each checkout form must name its default package.', 'wfc-cart') . '</p></td></tr>';
 			break;
 		case 'advanced':
 			wfcc_settings_text_row('delivery_retry_limit', __('Delivery retry limit', 'wfc-cart'), isset($settings['delivery_retry_limit']) ? $settings['delivery_retry_limit'] : 8, 'number');

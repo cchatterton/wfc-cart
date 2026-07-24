@@ -20,9 +20,12 @@ files=(
 
 directories=(
 	"admin"
+	"checkout"
 	"functions"
 	"gravity-forms"
+	"rest"
 	"scripts"
+	"stripe"
 	"styles"
 	"templates"
 )
