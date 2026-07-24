@@ -17,6 +17,21 @@ if rg -ni "bbconnect|brownbox|bb_cart|bb-cart" "$REPOSITORY_DIR" \
 	exit 1
 fi
 
+if rg -ni \
+	"(update_option|add_option|set_transient|set_site_transient|update_post_meta).*access_token|(error_log|trigger_error).*(access_token|client_secret)" \
+	"$REPOSITORY_DIR" \
+	-g "*.php" \
+	-g "!dist/**" \
+	-g "!tests/**"; then
+	echo "Salesforce token persistence or credential logging detected." >&2
+	exit 1
+fi
+
+if ! rg -q "'redirection' => 0" "$REPOSITORY_DIR/salesforce/authentication.php" "$REPOSITORY_DIR/salesforce/client.php"; then
+	echo "Salesforce HTTP clients must disable redirects." >&2
+	exit 1
+fi
+
 public_routes="$(rg -c "'permission_callback' => '__return_true'" "$REPOSITORY_DIR/rest/routes.php" || true)"
 if [[ "$public_routes" != "2" ]]; then
 	echo "Expected exactly two explicitly public REST routes." >&2

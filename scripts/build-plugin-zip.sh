@@ -24,6 +24,7 @@ directories=(
 	"functions"
 	"gravity-forms"
 	"rest"
+	"salesforce"
 	"scripts"
 	"stripe"
 	"styles"

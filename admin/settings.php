@@ -47,9 +47,18 @@ function wfcc_sanitize_settings($input) {
 		}
 	}
 
-	foreach (array('stripe_publishable_key', 'salesforce_login_url', 'salesforce_client_id') as $key) {
+	foreach (array('stripe_publishable_key', 'salesforce_client_id') as $key) {
 		if (isset($input[$key])) {
 			$output[$key] = sanitize_text_field($input[$key]);
+		}
+	}
+
+	if (isset($input['salesforce_login_url'])) {
+		$url = wfcc_sanitize_salesforce_login_url($input['salesforce_login_url']);
+		if ('' === $url) {
+			add_settings_error('wfcc_settings', 'wfcc_invalid_salesforce_url', __('Salesforce login URL must be an HTTPS salesforce.com origin.', 'wfc-cart'), 'error');
+		} else {
+			$output['salesforce_login_url'] = $url;
 		}
 	}
 
@@ -60,10 +69,25 @@ function wfcc_sanitize_settings($input) {
 	}
 
 	if (isset($input['salesforce_api_path'])) {
-		$path = '/' . ltrim(sanitize_text_field($input['salesforce_api_path']), '/');
-		if (0 === strpos($path, '/services/apexrest/')) {
+		$path = wfcc_sanitize_salesforce_api_path($input['salesforce_api_path']);
+		if ('' !== $path) {
 			$output['salesforce_api_path'] = $path;
+		} else {
+			add_settings_error('wfcc_settings', 'wfcc_invalid_salesforce_path', __('The Apex REST path must remain under /services/apexrest/wfc-cart/.', 'wfc-cart'), 'error');
 		}
+	}
+
+	if (array_key_exists('salesforce_field_map_json', $input)) {
+		$mapping = wfcc_sanitize_salesforce_field_map(wp_unslash($input['salesforce_field_map_json']));
+		if (is_wp_error($mapping)) {
+			add_settings_error('wfcc_settings', 'wfcc_invalid_salesforce_map', $mapping->get_error_message(), 'error');
+		} else {
+			$output['salesforce_field_map'] = $mapping;
+		}
+	}
+
+	if (isset($input['salesforce_required_fields'])) {
+		$output['salesforce_required_fields'] = wfcc_sanitize_salesforce_required_fields($input['salesforce_required_fields']);
 	}
 
 	if (isset($input['delivery_retry_limit'])) {
@@ -173,6 +197,32 @@ function wfcc_render_settings_fields($tab, $settings) {
 			wfcc_settings_text_row('salesforce_client_id', __('External Client App ID', 'wfc-cart'), isset($settings['salesforce_client_id']) ? $settings['salesforce_client_id'] : '');
 			wfcc_settings_secret_row('salesforce_client_secret', __('External Client App secret', 'wfc-cart'), wfcc_get_secret('salesforce_client_secret', 'WFCC_SALESFORCE_CLIENT_SECRET', 'WFCC_SALESFORCE_CLIENT_SECRET'));
 			wfcc_settings_text_row('salesforce_api_path', __('Apex REST path', 'wfc-cart'), isset($settings['salesforce_api_path']) ? $settings['salesforce_api_path'] : '/services/apexrest/wfc-cart/v1/transactions');
+			$mapping = isset($settings['salesforce_field_map']) && is_array($settings['salesforce_field_map'])
+				? wp_json_encode($settings['salesforce_field_map'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+				: '{}';
+			echo '<tr><th scope="row"><label for="wfcc-salesforce-field-map">' . esc_html__('Gravity Forms field mapping', 'wfc-cart') . '</label></th>';
+			echo '<td><textarea class="large-text code" rows="22" id="wfcc-salesforce-field-map" name="wfcc_settings[salesforce_field_map_json]">' . esc_textarea($mapping) . '</textarea>';
+			echo '<p class="description">' . esc_html__('JSON keyed only by the fixed WFC payload fields. Rules may read a Gravity Forms field or use a constant; Salesforce object and field API names are not accepted here.', 'wfc-cart') . '</p></td></tr>';
+			$required = isset($settings['salesforce_required_fields']) && is_array($settings['salesforce_required_fields'])
+				? implode(', ', $settings['salesforce_required_fields'])
+				: 'email, last_name';
+			wfcc_settings_text_row('salesforce_required_fields', __('Required mapped fields', 'wfc-cart'), $required);
+			$diagnostic = wfcc_get_salesforce_connection_diagnostic();
+			$detail = empty($diagnostic)
+				? __('Not tested yet.', 'wfc-cart')
+				: sprintf(
+					__('Last test: %1$s at %2$s%3$s', 'wfc-cart'),
+					'ok' === ($diagnostic['status'] ?? '') ? __('successful', 'wfc-cart') : __('failed', 'wfc-cart'),
+					(string) ($diagnostic['checked_at'] ?? ''),
+					empty($diagnostic['category']) ? '' : ' (' . sanitize_key($diagnostic['category']) . ')'
+				);
+			$test_url = wp_nonce_url(
+				add_query_arg('action', 'wfcc_test_salesforce_connection', admin_url('admin-post.php')),
+				'wfcc_test_salesforce_connection'
+			);
+			echo '<tr><th scope="row">' . esc_html__('Connection test', 'wfc-cart') . '</th><td>';
+			echo '<a class="button button-secondary" href="' . esc_url($test_url) . '">' . esc_html__('Test saved connection', 'wfc-cart') . '</a>';
+			echo '<p class="description">' . esc_html($detail) . '</p></td></tr>';
 			break;
 		case 'checkout':
 			$hosts = isset($settings['approved_redirect_hosts']) && is_array($settings['approved_redirect_hosts'])

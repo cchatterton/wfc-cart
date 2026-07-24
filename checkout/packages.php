@@ -70,13 +70,41 @@ function wfcc_amount_to_minor_units($amount, $currency) {
 		return 0;
 	}
 
+	$exponent = wfcc_currency_exponent($currency);
+
+	return (int) round((float) $normalised * (10 ** $exponent));
+}
+
+/**
+ * Return the supported currency exponent.
+ *
+ * @param string $currency ISO currency.
+ * @return int
+ */
+function wfcc_currency_exponent($currency) {
 	$zero_decimal = array(
 		'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA',
 		'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF',
 	);
-	$exponent = in_array(strtoupper($currency), $zero_decimal, true) ? 0 : 2;
 
-	return (int) round((float) $normalised * (10 ** $exponent));
+	return in_array(strtoupper($currency), $zero_decimal, true) ? 0 : 2;
+}
+
+/**
+ * Convert a stored minor-unit amount to a JSON-ready numeric value.
+ *
+ * @param int    $amount   Amount in minor units.
+ * @param string $currency ISO currency.
+ * @return int|float
+ */
+function wfcc_amount_from_minor_units($amount, $currency) {
+	$amount   = absint($amount);
+	$exponent = wfcc_currency_exponent($currency);
+	if (0 === $exponent) {
+		return $amount;
+	}
+
+	return round($amount / (10 ** $exponent), $exponent);
 }
 
 /**
