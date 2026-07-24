@@ -13,6 +13,22 @@ if (!defined('ABSPATH')) {
  * @return array<string, array{label:string,status:string,detail:string}>
  */
 function wfcc_get_health_checks() {
+	$salesforce_configured = '' !== wfcc_get_salesforce_login_url()
+		&& '' !== wfcc_get_salesforce_client_id()
+		&& '' !== wfcc_get_salesforce_client_secret()
+		&& '' !== wfcc_get_salesforce_api_path();
+	$salesforce_diagnostic = wfcc_get_salesforce_connection_diagnostic();
+	$salesforce_detail = $salesforce_configured
+		? __('OAuth client and fixed Apex endpoint configured', 'wfc-cart')
+		: __('OAuth client or fixed Apex endpoint missing', 'wfc-cart');
+	if (!empty($salesforce_diagnostic['checked_at'])) {
+		$salesforce_detail .= sprintf(
+			__('; last connection test %1$s at %2$s', 'wfc-cart'),
+			'ok' === ($salesforce_diagnostic['status'] ?? '') ? __('passed', 'wfc-cart') : __('failed', 'wfc-cart'),
+			(string) $salesforce_diagnostic['checked_at']
+		);
+	}
+
 	return array(
 		'gravity_forms' => array(
 			'label'  => __('Gravity Forms', 'wfc-cart'),
@@ -28,8 +44,8 @@ function wfcc_get_health_checks() {
 		),
 		'salesforce' => array(
 			'label'  => __('Salesforce', 'wfc-cart'),
-			'status' => wfcc_get_secret('salesforce_client_secret', 'WFCC_SALESFORCE_CLIENT_SECRET', 'WFCC_SALESFORCE_CLIENT_SECRET') ? 'ok' : 'warning',
-			'detail' => wfcc_get_secret('salesforce_client_secret', 'WFCC_SALESFORCE_CLIENT_SECRET', 'WFCC_SALESFORCE_CLIENT_SECRET') ? __('Client secret configured', 'wfc-cart') : __('Not configured', 'wfc-cart'),
+			'status' => $salesforce_configured ? 'ok' : 'warning',
+			'detail' => $salesforce_detail,
 		),
 		'webhook' => array(
 			'label'  => __('Stripe webhook signature', 'wfc-cart'),

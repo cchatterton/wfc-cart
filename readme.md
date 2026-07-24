@@ -1,7 +1,7 @@
 # WFC Cart
 
-Author: AlphaSys  
-Version: 0.4.0
+Author: AlphaSys
+Version: 0.5.0
 Status: Development
 
 ## Purpose
@@ -13,10 +13,10 @@ Salesforce through server-to-server integration.
 
 ## Current phase
 
-WFC Cart now has an independent runtime and Phase 4 Stripe checkout. Payment
-Element, PaymentIntent, SetupIntent, recurring first-payment preparation,
-verified webhooks, idempotency, and payment reconciliation are implemented.
-Salesforce delivery remains the next development phase.
+WFC Cart now includes the Phase 4 Stripe checkout and Phase 5 Salesforce
+delivery pipeline. Completed payments are queued for server-to-server delivery
+through a fixed, versioned Apex REST contract with controlled field mapping,
+idempotency, retries, and reconciliation.
 
 ## Key features
 
@@ -27,6 +27,11 @@ Salesforce delivery remains the next development phase.
 - Server-approved checkout packages and bounded donor-entered amounts.
 - PaymentIntent and SetupIntent processing with recurring Customer setup.
 - Verified, deduplicated webhooks and guarded transaction-state transitions.
+- Salesforce External Client App authentication using OAuth client credentials.
+- Fixed Apex REST payload and response contracts with stable transaction keys.
+- Controlled Gravity Forms mapping into approved WFC payload targets.
+- Persistent delivery state, bounded retries, manual recovery, and Stripe-state
+  reconciliation.
 - Protected WordPress-native transaction, line-item, batch, and fund-code
   records.
 - Direct-access protection across packaged PHP modules.
@@ -54,7 +59,8 @@ Salesforce delivery remains the next development phase.
 - `checkout/`: checkout packages and protected transaction state.
 - `stripe/`: fixed Stripe API client, intent orchestration, and webhooks.
 - `rest/`: public intent and webhook routes with internal security controls.
-- `salesforce/`: reserved for Phase 5 server-to-server delivery.
+- `salesforce/`: authentication, controlled mapping, fixed payload, delivery
+  outbox, retries, and reconciliation.
 - `scripts/` and `styles/`: scoped WFC assets.
 - `docs/`: baseline, decisions, phase reports, and future setup guides.
 
@@ -63,9 +69,12 @@ Salesforce delivery remains the next development phase.
 - Back up the database and files before deploying checkout changes.
 - Activation creates WFC settings and capabilities without importing data from
   another plugin.
-- `WFCC_STRIPE_SECRET_KEY`, `WFCC_STRIPE_WEBHOOK_SECRET`, and
-  `WFCC_SALESFORCE_CLIENT_SECRET` may be defined in `wp-config.php` or as
-  environment variables.
+- `WFCC_STRIPE_SECRET_KEY`, `WFCC_STRIPE_WEBHOOK_SECRET`,
+  `WFCC_SALESFORCE_LOGIN_URL`, `WFCC_SALESFORCE_CLIENT_ID`,
+  `WFCC_SALESFORCE_CLIENT_SECRET`, and `WFCC_SALESFORCE_API_PATH` may be
+  defined in `wp-config.php` or as environment variables.
+- Salesforce access tokens are retained only in memory for the current PHP
+  request and are never saved to WordPress.
 - The public release repository is `cchatterton/wfc-cart`. Define
   `WFCC_GITHUB_OWNER` only when maintaining an authorised downstream fork.
 
@@ -82,10 +91,11 @@ The build creates `dist/wfc-cart.zip` and the matching root
 
 ## Checkout setup
 
-See `docs/stripe-setup.md` and `docs/gravity-forms-checkout.md`. Complete the
-test-mode staging matrix before enabling live keys.
+See `docs/stripe-setup.md`, `docs/gravity-forms-checkout.md`, and
+`docs/salesforce-setup.md`. Complete the staging matrix before enabling live
+credentials.
 
 ## Next phase
 
-Phase 5 adds the Salesforce OAuth client, fixed payload, persistent
-delivery/retry processing, reconciliation, and operational integration tests.
+Phase 6 will focus on WFC-native operational completeness and deployment
+hardening without introducing dependencies on another cart or CRM plugin.

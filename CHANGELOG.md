@@ -2,6 +2,23 @@
 
 All notable changes to WFC Cart are recorded here.
 
+## 0.5.0 - 2026-07-24
+
+- Added Salesforce External Client App OAuth client-credentials
+  authentication with strict Salesforce HTTPS origin validation.
+- Added a fixed, versioned Apex REST request and response contract with stable
+  transaction-key idempotency.
+- Added controlled Gravity Forms field mapping, allow-listed transformations,
+  constants, conditions, metadata, and required-value validation.
+- Added a persistent transaction outbox with delivery states, attempt history,
+  deterministic exponential backoff, retry classification, and a configurable
+  maximum attempt threshold.
+- Added Stripe state reconciliation, Salesforce record references, connection
+  diagnostics, health status, queue visibility, and nonce-protected manual
+  retries.
+- Added five-minute WordPress-native queue scheduling and schema upgrade logic.
+- Added Phase 5 contract tests and Salesforce setup/operator documentation.
+
 ## 0.4.0 - 2026-07-24
 
 - Added Stripe Payment Element integration to designated Gravity Forms
