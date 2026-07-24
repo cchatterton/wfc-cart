@@ -65,6 +65,7 @@ function wfcc_render_delivery_queue_page() {
 	<div class="wrap wfcc-admin">
 		<h1><?php echo esc_html__('Salesforce Delivery Queue', 'wfc-cart'); ?></h1>
 		<table class="widefat striped wfcc-admin__table">
+			<caption class="screen-reader-text"><?php echo esc_html__('Transactions awaiting Salesforce delivery or review', 'wfc-cart'); ?></caption>
 			<thead><tr><th><?php echo esc_html__('Transaction', 'wfc-cart'); ?></th><th><?php echo esc_html__('State', 'wfc-cart'); ?></th><th><?php echo esc_html__('Attempts', 'wfc-cart'); ?></th><th><?php echo esc_html__('Last attempt', 'wfc-cart'); ?></th><th><?php echo esc_html__('Next attempt', 'wfc-cart'); ?></th><th><?php echo esc_html__('Last result', 'wfc-cart'); ?></th><th><?php echo esc_html__('Action', 'wfc-cart'); ?></th></tr></thead>
 			<tbody>
 				<?php if (!$transactions) : ?>

@@ -2,6 +2,28 @@
 
 All notable changes to WFC Cart are recorded here.
 
+## 0.7.0 - 2026-07-24
+
+- Added an executable production-readiness audit covering platform versions,
+  HTTPS, schema, dependencies, integrations, packages, cron, receipt email,
+  proxy handling, REST boundaries, and site lifecycle.
+- Added explicit no-store/nosniff headers to every WFC REST response, including
+  errors, plus fixed checkout and webhook request-size limits.
+- Added trusted proxy CIDR validation and right-to-left forwarded-address
+  resolution that ignores spoofed client-supplied hops.
+- Added multisite-aware network activation, deactivation, bounded site
+  iteration, context restoration, and new-site initialisation.
+- Added an idempotent schema 6-to-7 upgrade with a privacy-safe upgrade journal.
+- Improved checkout accessibility with localised state messages, error focus,
+  submit disabled states, reduced-motion support, and accessible admin table
+  captions.
+- Added amount-change debouncing, stale intent-response suppression, explicit
+  browser no-store requests, and safer non-JSON error handling.
+- Added server-side Gravity Forms amount revalidation so a changed visible
+  amount cannot be submitted against an earlier prepared intent.
+- Added Phase 7 proxy, caching, readiness, multisite, activation, upgrade, and
+  rollback contract tests.
+
 ## 0.6.0 - 2026-07-24
 
 - Added fixed, idempotent transaction line items for donation, product, event,

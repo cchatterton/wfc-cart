@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 
 add_action('plugins_loaded', 'wfcc_maybe_upgrade_schema', 5);
 add_filter('cron_schedules', 'wfcc_add_cron_schedules');
+add_action('wp_initialize_site', 'wfcc_initialize_new_site', 100, 2);
 
 /**
  * Add the bounded delivery queue interval.
@@ -94,15 +95,65 @@ function wfcc_maybe_upgrade_schema() {
 		wfcc_add_capabilities();
 	}
 
+	if (version_compare($installed_version, '7', '<')) {
+		$settings += array(
+			'trusted_proxy_cidrs' => array(),
+		);
+		update_option('wfcc_settings', $settings, false);
+	}
+
 	update_option('wfcc_schema_version', WFCC_SCHEMA_VERSION, false);
+	update_option(
+		'wfcc_last_schema_upgrade',
+		array(
+			'from'       => $installed_version,
+			'to'         => WFCC_SCHEMA_VERSION,
+			'version'    => WFCC_VERSION,
+			'upgraded_at' => gmdate('c'),
+		),
+		false
+	);
 }
 
 /**
- * Activate WFC Cart without modifying pre-existing site data.
+ * Run a callback once in each multisite blog using bounded queries.
+ *
+ * @param callable $callback Site callback.
+ * @return void
+ */
+function wfcc_for_each_site($callback) {
+	if (!is_multisite()) {
+		call_user_func($callback);
+		return;
+	}
+
+	$offset = 0;
+	do {
+		$site_ids = get_sites(
+			array(
+				'fields' => 'ids',
+				'number' => 100,
+				'offset' => $offset,
+			)
+		);
+		foreach ($site_ids as $site_id) {
+			switch_to_blog(absint($site_id));
+			try {
+				call_user_func($callback);
+			} finally {
+				restore_current_blog();
+			}
+		}
+		$offset += count($site_ids);
+	} while (100 === count($site_ids));
+}
+
+/**
+ * Activate WFC Cart for the current site without modifying existing data.
  *
  * @return void
  */
-function wfcc_activate() {
+function wfcc_activate_site() {
 	wfcc_add_capabilities();
 
 	if (false === get_option('wfcc_settings', false)) {
@@ -122,6 +173,7 @@ function wfcc_activate() {
 				'receipt_number_prefix'  => 'WFC',
 				'receipt_email_field_id' => '',
 				'receipt_email_subject'  => __('Your contribution receipt {receipt_number}', 'wfc-cart'),
+				'trusted_proxy_cidrs'    => array(),
 			),
 			'',
 			false
@@ -139,11 +191,26 @@ function wfcc_activate() {
 }
 
 /**
- * Deactivate WFC Cart while preserving all settings and records.
+ * Activate one site or every existing site during network activation.
+ *
+ * @param bool $network_wide Network activation.
+ * @return void
+ */
+function wfcc_activate($network_wide = false) {
+	if ($network_wide && is_multisite()) {
+		wfcc_for_each_site('wfcc_activate_site');
+		return;
+	}
+
+	wfcc_activate_site();
+}
+
+/**
+ * Stop scheduled jobs for the current site while preserving all data.
  *
  * @return void
  */
-function wfcc_deactivate() {
+function wfcc_deactivate_site() {
 	$timestamp = wp_next_scheduled('wfcc_process_delivery_queue');
 	while ($timestamp) {
 		wp_unschedule_event($timestamp, 'wfcc_process_delivery_queue');
@@ -154,5 +221,48 @@ function wfcc_deactivate() {
 	while ($timestamp) {
 		wp_unschedule_event($timestamp, 'wfcc_cleanup_idempotency');
 		$timestamp = wp_next_scheduled('wfcc_cleanup_idempotency');
+	}
+}
+
+/**
+ * Deactivate one site or every site after network deactivation.
+ *
+ * @param bool $network_wide Network deactivation.
+ * @return void
+ */
+function wfcc_deactivate($network_wide = false) {
+	if ($network_wide && is_multisite()) {
+		wfcc_for_each_site('wfcc_deactivate_site');
+		return;
+	}
+
+	wfcc_deactivate_site();
+}
+
+/**
+ * Initialise a newly created site when WFC Cart is network active.
+ *
+ * @param WP_Site $new_site New site.
+ * @param array   $args     Site creation arguments.
+ * @return void
+ */
+function wfcc_initialize_new_site($new_site, $args = array()) {
+	unset($args);
+	if (!is_multisite() || !is_object($new_site) || empty($new_site->blog_id)) {
+		return;
+	}
+
+	if (!function_exists('is_plugin_active_for_network')) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+	}
+	if (!is_plugin_active_for_network(plugin_basename(WFCC_PLUGIN_FILE))) {
+		return;
+	}
+
+	switch_to_blog(absint($new_site->blog_id));
+	try {
+		wfcc_activate_site();
+	} finally {
+		restore_current_blog();
 	}
 }

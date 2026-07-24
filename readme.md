@@ -1,7 +1,7 @@
 # WFC Cart
 
 Author: AlphaSys
-Version: 0.6.0
+Version: 0.7.0
 Status: Development
 
 ## Purpose
@@ -13,10 +13,10 @@ Salesforce through server-to-server integration.
 
 ## Current phase
 
-WFC Cart now includes Stripe checkout, Salesforce delivery, and Phase 6
-operational workflows. Protected transaction summaries can be reported,
-exported, annotated through a validation-first import, receipted, and sealed
-into immutable operational batches.
+WFC Cart now includes Stripe checkout, Salesforce delivery, operational
+workflows, and Phase 7 production-readiness controls. Runtime configuration,
+REST boundaries, proxy handling, scheduled processing, and site lifecycle can
+be evaluated from an executable administrator audit.
 
 ## Key features
 
@@ -39,6 +39,12 @@ into immutable operational batches.
 - Validation-first metadata imports that cannot create transactions or change
   financial state.
 - Immutable transaction batches with per-currency original totals.
+- Explicit no-store headers and fixed body-size limits on WFC REST routes.
+- Trusted-proxy CIDR handling for per-client checkout rate limiting.
+- Multisite-aware network activation, deactivation, and new-site setup.
+- Executable production-readiness checks with a safe audit snapshot.
+- Localised checkout states, focused errors, submit-state controls, input
+  debouncing, and reduced-motion support.
 - Protected WordPress-native transaction, line-item, batch, and fund-code
   records.
 - Direct-access protection across packaged PHP modules.
@@ -60,7 +66,7 @@ into immutable operational batches.
 
 - `wfc-cart.php`: plugin metadata, constants, includes, and lifecycle hooks.
 - `functions/`: setup, data model, capabilities, dependencies, assets, helpers,
-  and GitHub updater.
+  runtime/readiness hardening, and GitHub updater.
 - `gravity-forms/`: WFC Cart form roles and Gravity Forms integration.
 - `admin/`: WFC-native administration screens.
 - `checkout/`: checkout packages and protected transaction state.
@@ -101,11 +107,11 @@ The build creates `dist/wfc-cart.zip` and the matching root
 ## Checkout setup
 
 See `docs/stripe-setup.md`, `docs/gravity-forms-checkout.md`,
-`docs/salesforce-setup.md`, and `docs/operations-guide.md`. Complete the staging
-matrix before enabling live credentials.
+`docs/salesforce-setup.md`, `docs/operations-guide.md`, and
+`docs/production-validation.md`. Complete the staging matrix before enabling
+live credentials.
 
 ## Next phase
 
-Phase 7 will validate the complete WFC-native workflow under production-like
-accessibility, performance, caching, multisite, upgrade, and rollback
-conditions.
+Phase 8 is release readiness: external staging evidence, security and
+accessibility review, production pilot approval, and final release governance.

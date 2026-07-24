@@ -36,7 +36,8 @@ for action_file in \
 	"$REPOSITORY_DIR/operations/receipts.php" \
 	"$REPOSITORY_DIR/operations/exports.php" \
 	"$REPOSITORY_DIR/operations/imports.php" \
-	"$REPOSITORY_DIR/operations/batches.php"; do
+	"$REPOSITORY_DIR/operations/batches.php" \
+	"$REPOSITORY_DIR/functions/readiness.php"; do
 	if ! rg -q "current_user_can\\(" "$action_file" || ! rg -q "check_admin_referer\\(" "$action_file"; then
 		echo "Operational admin action lacks a capability or nonce check: $action_file" >&2
 		exit 1
@@ -61,6 +62,36 @@ fi
 
 if ! rg -q 'wfcc_verify_stripe_signature\(\$payload, \$signature, \$secret\)' "$REPOSITORY_DIR/rest/routes.php"; then
 	echo "Stripe webhook route is missing raw-body signature verification." >&2
+	exit 1
+fi
+
+for boundary in \
+	"Cache-Control.*no-store" \
+	"wfcc_request_body_is_bounded.*16384" \
+	"wfcc_request_body_is_bounded.*1048576"; do
+	if ! rg -q "$boundary" "$REPOSITORY_DIR/rest/routes.php"; then
+		echo "Missing WFC REST cache or request-size boundary: $boundary" >&2
+		exit 1
+	fi
+done
+
+if rg -n "HTTP_X_FORWARDED_FOR" "$REPOSITORY_DIR/rest/routes.php"; then
+	echo "REST routes must resolve forwarded addresses only through the trusted-proxy helper." >&2
+	exit 1
+fi
+
+if ! rg -q "cache: 'no-store'" "$REPOSITORY_DIR/scripts/wfc-cart-checkout.js"; then
+	echo "Checkout browser requests must opt out of caching." >&2
+	exit 1
+fi
+
+if ! rg -q "error\\.focus\\(\\)" "$REPOSITORY_DIR/scripts/wfc-cart-checkout.js"; then
+	echo "Checkout errors must receive keyboard focus." >&2
+	exit 1
+fi
+
+if ! rg -q 'resolved !== \$expected_amount' "$REPOSITORY_DIR/gravity-forms/checkout.php"; then
+	echo "Gravity Forms must reject an amount changed after intent preparation." >&2
 	exit 1
 fi
 

@@ -36,6 +36,23 @@ function wfcc_register_frontend_assets() {
 		WFCC_VERSION,
 		true
 	);
+	wp_localize_script(
+		'wfcc-checkout',
+		'WFCC_CONFIG',
+		array(
+			'strings' => array(
+				'preparing'        => __('Preparing secure payment fields…', 'wfc-cart'),
+				'prepareFailed'    => __('Secure payment fields could not be prepared.', 'wfc-cart'),
+				'ready'            => __('Secure payment fields are ready.', 'wfc-cart'),
+				'paymentFailed'    => __('Payment could not be completed.', 'wfc-cart'),
+				'confirming'       => __('Confirming payment securely…', 'wfc-cart'),
+				'consentRequired'  => __('Consent is required before saving a payment method for future payments.', 'wfc-cart'),
+				'notCompleted'     => __('Stripe has not completed the payment.', 'wfc-cart'),
+				'confirmed'        => __('Payment confirmed. Completing your submission…', 'wfc-cart'),
+				'notConfigured'    => __('Stripe checkout is not configured.', 'wfc-cart'),
+			),
+		)
+	);
 }
 
 /**

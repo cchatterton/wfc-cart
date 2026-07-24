@@ -117,6 +117,10 @@ function wfcc_sanitize_settings($input) {
 		$output['approved_redirect_hosts'] = array_values(array_unique($hosts));
 	}
 
+	if (isset($input['trusted_proxy_cidrs'])) {
+		$output['trusted_proxy_cidrs'] = wfcc_sanitize_trusted_proxy_cidrs($input['trusted_proxy_cidrs']);
+	}
+
 	if (array_key_exists('checkout_packages_json', $input)) {
 		$packages = wfcc_sanitize_checkout_packages(wp_unslash($input['checkout_packages_json']));
 		if (is_wp_error($packages)) {
@@ -277,6 +281,12 @@ function wfcc_render_settings_fields($tab, $settings) {
 			break;
 		case 'advanced':
 			wfcc_settings_text_row('delivery_retry_limit', __('Delivery retry limit', 'wfc-cart'), isset($settings['delivery_retry_limit']) ? $settings['delivery_retry_limit'] : 8, 'number');
+			$trusted_proxies = isset($settings['trusted_proxy_cidrs']) && is_array($settings['trusted_proxy_cidrs'])
+				? implode("\n", $settings['trusted_proxy_cidrs'])
+				: '';
+			echo '<tr><th scope="row"><label for="wfcc-trusted-proxies">' . esc_html__('Trusted proxy CIDRs', 'wfc-cart') . '</label></th>';
+			echo '<td><textarea class="large-text code" rows="6" id="wfcc-trusted-proxies" name="wfcc_settings[trusted_proxy_cidrs]">' . esc_textarea($trusted_proxies) . '</textarea>';
+			echo '<p class="description">' . esc_html__('One exact proxy IP or CIDR per line. Forwarded client addresses are ignored unless REMOTE_ADDR matches this list.', 'wfc-cart') . '</p></td></tr>';
 			break;
 		default:
 			echo '<tr><th scope="row">' . esc_html($GLOBALS['title']) . '</th><td>';
