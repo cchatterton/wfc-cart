@@ -2,6 +2,28 @@
 
 All notable changes to WFC Cart are recorded here.
 
+## 0.8.0 - 2026-07-24
+
+- Added five ordered production release gates for external staging, independent
+  security review, independent accessibility review, production pilot, and
+  final approval.
+- Bound approvals to the exact plugin and schema version so earlier evidence
+  cannot silently approve a later release.
+- Required a current no-blocker technical audit before staging or final release
+  approval.
+- Added dedicated release-approval capability, protected approval, rejection,
+  and revocation actions, and independent-review attestations.
+- Added an append-only SHA-256 hash chain for release decisions with
+  fail-closed integrity validation.
+- Added a privacy-minimised, checksummed JSON evidence export.
+- Added Phase 8 contract tests and a repeatable local and GitHub Actions release
+  validation workflow.
+- Made release ZIP creation byte-for-byte reproducible with normalised metadata
+  and a two-build checksum assertion.
+- Documented evidence handling, gate order, pilot limits, rollback criteria,
+  segregation of duties, and the rule that installing this release does not
+  constitute production approval.
+
 ## 0.7.0 - 2026-07-24
 
 - Added an executable production-readiness audit covering platform versions,

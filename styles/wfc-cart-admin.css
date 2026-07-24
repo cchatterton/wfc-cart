@@ -21,6 +21,23 @@
 	margin-block: 1rem;
 }
 
+.wfcc-admin__governance-form {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	margin-block: 1rem;
+	max-width: 52rem;
+	padding: 1rem;
+}
+
+.wfcc-admin__governance-form label {
+	font-weight: 600;
+}
+
+.wfcc-admin__error {
+	border-inline-start: 4px solid #d63638;
+	padding-inline-start: 0.75rem;
+}
+
 .wfcc-status {
 	border-radius: 999px;
 	display: inline-block;

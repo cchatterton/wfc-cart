@@ -63,7 +63,7 @@ $ready_context = array(
 	'php_version'              => '8.3.0',
 	'wp_version'               => '6.8',
 	'https'                    => true,
-	'schema_version'           => '7',
+	'schema_version'           => WFCC_SCHEMA_VERSION,
 	'gravity_forms'            => true,
 	'stripe'                   => true,
 	'webhook'                  => true,
@@ -123,12 +123,12 @@ $GLOBALS['wfcc_test_options'] = array(
 );
 $GLOBALS['wfcc_test_administrator'] = new WFCC_Test_Role();
 wfcc_maybe_upgrade_schema();
-wfcc_phase_7_assert('7' === get_option('wfcc_schema_version'), 'schema 6 must upgrade to schema 7');
+wfcc_phase_7_assert(WFCC_SCHEMA_VERSION === get_option('wfcc_schema_version'), 'schema 6 must upgrade to the current schema');
 $upgraded_settings = get_option('wfcc_settings');
 wfcc_phase_7_assert('NZD' === $upgraded_settings['currency'], 'the schema upgrade must preserve existing settings');
 wfcc_phase_7_assert(array() === $upgraded_settings['trusted_proxy_cidrs'], 'the schema upgrade must add a safe empty proxy list');
 $upgrade_journal = get_option('wfcc_last_schema_upgrade');
-wfcc_phase_7_assert('6' === $upgrade_journal['from'] && '7' === $upgrade_journal['to'], 'the schema upgrade must create a safe rollback journal');
+wfcc_phase_7_assert('6' === $upgrade_journal['from'] && WFCC_SCHEMA_VERSION === $upgrade_journal['to'], 'the schema upgrade must create a safe rollback journal');
 wfcc_maybe_upgrade_schema();
 wfcc_phase_7_assert($upgrade_journal === get_option('wfcc_last_schema_upgrade'), 'the schema upgrade must be idempotent');
 
@@ -136,7 +136,7 @@ $GLOBALS['wfcc_test_options'] = array();
 $GLOBALS['wfcc_test_schedules'] = array();
 $GLOBALS['wfcc_test_administrator'] = new WFCC_Test_Role();
 wfcc_activate_site();
-wfcc_phase_7_assert('7' === get_option('wfcc_schema_version'), 'fresh activation must install schema 7');
+wfcc_phase_7_assert(WFCC_SCHEMA_VERSION === get_option('wfcc_schema_version'), 'fresh activation must install the current schema');
 wfcc_phase_7_assert(isset(get_option('wfcc_settings')['trusted_proxy_cidrs']), 'fresh activation must include trusted-proxy defaults');
 wfcc_phase_7_assert((bool) wp_next_scheduled('wfcc_process_delivery_queue'), 'fresh activation must schedule delivery');
 wfcc_phase_7_assert((bool) wp_next_scheduled('wfcc_cleanup_idempotency'), 'fresh activation must schedule cleanup');

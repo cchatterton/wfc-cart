@@ -102,6 +102,13 @@ function wfcc_maybe_upgrade_schema() {
 		update_option('wfcc_settings', $settings, false);
 	}
 
+	if (version_compare($installed_version, '8', '<')) {
+		if (false === get_option('wfcc_release_governance_journal', false)) {
+			add_option('wfcc_release_governance_journal', array(), '', false);
+		}
+		wfcc_add_capabilities();
+	}
+
 	update_option('wfcc_schema_version', WFCC_SCHEMA_VERSION, false);
 	update_option(
 		'wfcc_last_schema_upgrade',
@@ -182,6 +189,10 @@ function wfcc_activate_site() {
 
 	if (false === get_option('wfcc_schema_version', false)) {
 		add_option('wfcc_schema_version', WFCC_SCHEMA_VERSION, '', false);
+	}
+
+	if (false === get_option('wfcc_release_governance_journal', false)) {
+		add_option('wfcc_release_governance_journal', array(), '', false);
 	}
 
 	wfcc_schedule_delivery_queue();
