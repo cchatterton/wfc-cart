@@ -22,7 +22,8 @@ for test_file in \
 	"phase-5-core.php" \
 	"phase-6-core.php" \
 	"phase-7-core.php" \
-	"phase-8-core.php"; do
+	"phase-8-core.php" \
+	"phase-9-core.php"; do
 	"$PHP_COMMAND" "$REPOSITORY_DIR/tests/$test_file"
 done
 

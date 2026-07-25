@@ -62,6 +62,13 @@ if (!function_exists('update_post_meta')) {
 	}
 }
 
+if (!function_exists('delete_post_meta')) {
+	function delete_post_meta($post_id, $key) {
+		unset($GLOBALS['wfcc_test_meta'][$post_id][$key]);
+		return true;
+	}
+}
+
 /**
  * Fail the contract test.
  *

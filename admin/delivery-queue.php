@@ -13,6 +13,10 @@ if (!defined('ABSPATH')) {
  * @return int
  */
 function wfcc_count_pending_deliveries() {
+	if (!wfcc_uses_salesforce_crm()) {
+		return 0;
+	}
+
 	$query = new WP_Query(
 		array(
 			'post_type'              => 'transaction',
@@ -43,6 +47,15 @@ function wfcc_count_pending_deliveries() {
 function wfcc_render_delivery_queue_page() {
 	if (!current_user_can('wfcc_view_transactions')) {
 		wp_die(esc_html__('You are not allowed to view the delivery queue.', 'wfc-cart'));
+	}
+	if (!wfcc_uses_salesforce_crm()) {
+		?>
+		<div class="wrap wfcc-admin">
+			<h1><?php echo esc_html__('Salesforce Delivery Queue', 'wfc-cart'); ?></h1>
+			<p><?php echo esc_html__('Salesforce delivery is disabled. Donor PII is retained only in each protected Gravity Forms cart entry.', 'wfc-cart'); ?></p>
+		</div>
+		<?php
+		return;
 	}
 
 	$transactions = get_posts(

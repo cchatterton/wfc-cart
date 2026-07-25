@@ -52,7 +52,14 @@ function wfcc_parse_operational_import_csv($csv) {
 
 		$key       = wfcc_sanitize_transaction_key(trim((string) $values[0]));
 		$fund_code = substr(sanitize_key($values[1]), 0, 50);
-		$reference = substr(sanitize_text_field($values[2]), 0, 100);
+		$reference = wfcc_sanitize_operational_reference($values[2]);
+		if ('' !== trim((string) $values[2]) && '' === $reference) {
+			fclose($stream);
+			return new WP_Error(
+				'wfcc_import_reference_invalid',
+				__('Operational references must be opaque identifiers and must not contain donor details.', 'wfc-cart')
+			);
+		}
 		if ('' === $key || ('' === $fund_code && '' === $reference) || isset($seen[$key])) {
 			fclose($stream);
 			return new WP_Error('wfcc_import_row_invalid', __('The operational CSV contains an invalid or duplicate transaction row.', 'wfc-cart'));

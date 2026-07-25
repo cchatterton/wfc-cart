@@ -1,6 +1,9 @@
-# Salesforce setup
+# Salesforce CRM mode setup
 
-WFC Cart 0.6.0 sends completed transactions from WordPress to a
+Salesforce is an optional CRM mode. Select **Salesforce CRM** under **WFC Cart
+→ Settings → General** before configuring or testing the integration.
+
+WFC Cart sends completed transactions from WordPress to a
 purpose-specific Apex REST endpoint. It does not expose Salesforce
 authentication or object selection to the browser.
 
@@ -130,8 +133,9 @@ In a Salesforce sandbox and Stripe test mode:
 
 1. Complete a one-off donation.
 2. Confirm its queue state becomes `salesforce_delivered`.
-3. Confirm the returned Salesforce transaction reference is attached to the
-   protected WFC transaction.
+3. Confirm the returned Salesforce transaction and recurring-gift references
+   are attached to the protected WFC transaction. Salesforce Contact IDs are
+   deliberately not retained in WordPress.
 4. Replay the same transaction key and confirm Salesforce returns the existing
    result without creating duplicate records.
 5. Cause a temporary endpoint failure and confirm the transaction is retried.
@@ -198,4 +202,5 @@ this contract.
 - The default attempt limit is eight and may be changed from 1 to 20.
 - Stored errors contain only an internal code, category, and HTTP status.
 - Donor details are read from the protected Gravity Forms entry at delivery
-  time and are not duplicated into the queue metadata.
+  time and are not duplicated into queue metadata or the stored payload
+  fingerprint.

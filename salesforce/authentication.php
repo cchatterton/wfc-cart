@@ -134,6 +134,14 @@ function wfcc_salesforce_error($code, $message, $category, $retryable = false, $
  * @return array<string, string>|WP_Error
  */
 function wfcc_salesforce_authenticate($force = false) {
+	if (!wfcc_uses_salesforce_crm()) {
+		return wfcc_salesforce_error(
+			'wfcc_salesforce_disabled',
+			__('Salesforce is disabled by the current CRM data-location setting.', 'wfc-cart'),
+			'configuration'
+		);
+	}
+
 	if ($force) {
 		wfcc_salesforce_runtime_token('clear');
 	}
@@ -234,6 +242,9 @@ function wfcc_handle_salesforce_connection_test() {
 		wp_die(esc_html__('You are not allowed to test Salesforce.', 'wfc-cart'));
 	}
 	check_admin_referer('wfcc_test_salesforce_connection');
+	if (!wfcc_uses_salesforce_crm()) {
+		wp_die(esc_html__('Salesforce is disabled by the current CRM data-location setting.', 'wfc-cart'));
+	}
 
 	$result = wfcc_salesforce_authenticate(true);
 	$error_data = is_wp_error($result) ? $result->get_error_data() : array();

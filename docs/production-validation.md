@@ -1,6 +1,6 @@
 # Production validation
 
-WFC Cart 0.8.0 converts configuration and runtime prerequisites into an
+WFC Cart 0.9.0 converts configuration and runtime prerequisites into an
 executable readiness audit, then defines the external scenarios that still
 require staging evidence.
 
@@ -13,17 +13,21 @@ Blocking checks:
 - PHP 8.1 or later;
 - WordPress 6.4 or later;
 - WordPress recognises HTTPS;
-- WFC schema 8 completed;
+- WFC schema 9 completed;
 - Gravity Forms available;
 - Stripe publishable and secret keys configured;
 - Stripe webhook signing secret configured;
-- Salesforce OAuth and fixed endpoint configured;
+- a valid CRM data location selected;
+- Salesforce OAuth and fixed endpoint configured when Salesforce CRM mode is
+  selected;
+- no recurring or SetupIntent packages when WordPress CRM mode is selected;
 - at least one checkout package configured; and
 - WFC REST cache and request-size boundaries loaded.
 
 Warnings:
 
-- WP-Cron disabled or the delivery schedule missing;
+- WP-Cron disabled or the delivery schedule missing in Salesforce mode;
+- a Salesforce delivery schedule unexpectedly active in WordPress mode;
 - automatic receipt email enabled without a Gravity Forms field; and
 - an `X-Forwarded-For` header present when the immediate proxy address is not
   in the trusted CIDR list.
@@ -98,7 +102,7 @@ evidence for each scenario.
     intent prepared for a different visible amount.
 12. Mobile viewport and keyboard-only completion.
 
-### Webhooks and Salesforce
+### Webhooks and CRM modes
 
 1. Valid Stripe webhook.
 2. Invalid signature and expired timestamp.
@@ -109,6 +113,13 @@ evidence for each scenario.
 7. Salesforce validation failure with manual recovery.
 8. Duplicate Salesforce transaction key.
 9. Payload schema `1.1` with zero, one, and multiple line items.
+10. WordPress CRM mode with no Salesforce credentials and no delivery queue.
+11. Confirm a completed WordPress-mode checkout has one Gravity Forms entry
+    and no donor fields in WFC transaction metadata, reports, or exports.
+12. Confirm recurring and SetupIntent packages are unavailable and block
+    readiness in WordPress mode.
+13. Switch to Salesforce mode and confirm delivery scheduling and required
+    credentials become active.
 
 ### Operations
 
@@ -131,9 +142,12 @@ evidence for each scenario.
 6. Page cache enabled.
 7. Network activation on multisite.
 8. New multisite blog after network activation.
-9. Schema 6 to 7 upgrade.
-10. Deactivation/reactivation.
-11. Rollback to the previous immutable release and forward upgrade again.
+9. Schema 8 to 9 upgrade with no Salesforce credentials; confirm WordPress
+   mode and no delivery schedule.
+10. Schema 8 to 9 upgrade with complete Salesforce credentials; confirm
+    Salesforce mode and delivery scheduling.
+11. Deactivation/reactivation.
+12. Rollback to the previous immutable release and forward upgrade again.
 
 ## Accessibility checks
 

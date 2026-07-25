@@ -1,6 +1,19 @@
 # Gravity Forms checkout setup
 
-## 1. Configure a checkout package
+## 1. Select the CRM data location
+
+Open **WFC Cart → Settings → General** and choose:
+
+- **WordPress — single Gravity Forms entry** for one-off payment sites that
+  keep donor PII only in Gravity Forms; or
+- **Salesforce CRM** for server-to-server donor and gift delivery, including
+  recurring-payment ownership.
+
+In WordPress mode, the accepted checkout entry is the sole WFC-managed donor
+PII record. Do not add donor fields to transaction titles, operational
+references, line-item labels, imports, exports, or release evidence.
+
+## 2. Configure a checkout package
 
 Open **WFC Cart → Settings → Checkout** and add an object keyed by an opaque
 package ID. Amounts are integer minor units.
@@ -37,7 +50,10 @@ must name a required consent field for future off-session payments.
 The thank-you URL must use the site host or a host listed above the package
 JSON in the Checkout settings.
 
-## 2. Designate the form
+WordPress mode supports one-off `payment` packages only. Recurring packages and
+`setup` mode are unavailable until Salesforce CRM mode is selected.
+
+## 3. Designate the form
 
 In the Gravity Forms form settings:
 
@@ -49,7 +65,11 @@ In the Gravity Forms form settings:
 
 WFC Cart inserts Stripe's Payment Element before the form submit button.
 
-## 3. Package links
+Each completed checkout must create one Gravity Forms entry. WFC Cart links the
+protected transaction to that entry ID and does not copy its donor field
+values.
+
+## 4. Package links
 
 The default package loads without a query parameter. An explicitly allowed
 package can be selected with:

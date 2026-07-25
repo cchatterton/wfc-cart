@@ -47,6 +47,8 @@ function wfcc_create_transaction($transaction_key, $package, $amount, $form_id) 
 		'wfcc_frequency'       => isset($package['frequency']) ? sanitize_key($package['frequency']) : 'one-off',
 		'wfcc_recurring'       => !empty($package['recurring']) ? '1' : '0',
 		'wfcc_form_id'         => absint($form_id),
+		'wfcc_crm_mode'        => wfcc_get_crm_mode(),
+		'wfcc_crm_state'       => 'awaiting_gravity_forms_entry',
 		'wfcc_payment_state'   => 'pending',
 		'wfcc_created_at'      => gmdate('c'),
 	);

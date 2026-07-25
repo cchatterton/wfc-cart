@@ -10,6 +10,54 @@ if (!defined('ABSPATH')) {
 define('WFCC_SALESFORCE_PAYLOAD_VERSION', '1.1');
 
 /**
+ * Hash only the non-donor delivery contract used for operational comparison.
+ *
+ * @param array<string, mixed> $payload Complete in-memory Salesforce payload.
+ * @return string
+ */
+function wfcc_salesforce_payload_fingerprint($payload) {
+	$gift = is_array($payload['gift'] ?? null) ? $payload['gift'] : array();
+	$line_items = array();
+	foreach (is_array($payload['lineItems'] ?? null) ? $payload['lineItems'] : array() as $line_item) {
+		if (!is_array($line_item)) {
+			continue;
+		}
+		$line_items[] = array(
+			'type'        => $line_item['type'] ?? '',
+			'quantity'    => $line_item['quantity'] ?? 0,
+			'unitAmount'  => $line_item['unitAmount'] ?? 0,
+			'taxAmount'   => $line_item['taxAmount'] ?? 0,
+			'totalAmount' => $line_item['totalAmount'] ?? 0,
+			'currency'    => $line_item['currency'] ?? '',
+			'fundCode'    => $line_item['fundCode'] ?? '',
+		);
+	}
+	$fingerprint = array(
+		'schemaVersion'   => $payload['schemaVersion'] ?? '',
+		'operation'       => $payload['operation'] ?? '',
+		'transactionKey'  => $payload['transactionKey'] ?? '',
+		'transactionType' => $payload['transactionType'] ?? '',
+		'gift'            => array(
+			'amount'       => $gift['amount'] ?? 0,
+			'currency'     => $gift['currency'] ?? '',
+			'frequency'    => $gift['frequency'] ?? '',
+			'campaignCode' => $gift['campaignCode'] ?? '',
+			'fundCode'     => $gift['fundCode'] ?? '',
+			'giftType'     => $gift['giftType'] ?? '',
+		),
+		'lineItems'       => $line_items,
+		'stripe'          => $payload['stripe'] ?? array(),
+		'recurring'       => array(
+			'enabled'           => $payload['recurring']['enabled'] ?? false,
+			'consentRecordedAt' => $payload['recurring']['consentRecordedAt'] ?? '',
+		),
+		'occurredAt'      => $payload['occurredAt'] ?? '',
+	);
+
+	return hash('sha256', wp_json_encode($fingerprint));
+}
+
+/**
  * Build the fixed payload without persisting duplicate donor data.
  *
  * @param int $transaction_id Transaction post ID.

@@ -156,6 +156,15 @@ function taxonomy_exists($taxonomy) {
 function register_taxonomy($taxonomy, $object_type, $args) {
 	$GLOBALS['wfcc_test_taxonomies'][$taxonomy] = array($object_type, $args);
 }
+function get_post_type($post_id) {
+	return $GLOBALS['wfcc_test_post_types_by_id'][$post_id] ?? '';
+}
+function delete_post_meta_by_key($meta_key) {
+	foreach ($GLOBALS['wfcc_test_meta'] ?? array() as $post_id => $meta) {
+		unset($GLOBALS['wfcc_test_meta'][$post_id][$meta_key]);
+	}
+	return true;
+}
 
 require dirname(__DIR__) . '/wfc-cart.php';
 
@@ -176,6 +185,7 @@ foreach ($required_constants as $constant) {
 $required_functions = array(
 	'wfcc_activate',
 	'wfcc_get_settings',
+	'wfcc_get_crm_mode',
 	'wfcc_is_checkout_form',
 	'wfcc_build_operational_report',
 	'wfcc_create_transaction_receipt',

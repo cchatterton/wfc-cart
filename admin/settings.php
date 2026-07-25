@@ -40,6 +40,10 @@ function wfcc_sanitize_settings($input) {
 
 	$output = $existing;
 
+	if (isset($input['crm_mode'])) {
+		$output['crm_mode'] = wfcc_sanitize_crm_mode($input['crm_mode']);
+	}
+
 	if (isset($input['currency'])) {
 		$currency = strtoupper(sanitize_key($input['currency']));
 		if (3 === strlen($currency)) {
@@ -205,6 +209,21 @@ function wfcc_render_settings_fields($tab, $settings) {
 	switch ($tab) {
 		case 'general':
 			wfcc_settings_text_row('currency', __('Default currency', 'wfc-cart'), isset($settings['currency']) ? $settings['currency'] : 'AUD');
+			wfcc_settings_select_row(
+				'crm_mode',
+				__('CRM data location', 'wfc-cart'),
+				wfcc_get_crm_mode(),
+				array(
+					'wordpress'  => __('WordPress — single Gravity Forms entry', 'wfc-cart'),
+					'salesforce' => __('Salesforce CRM', 'wfc-cart'),
+				),
+				__('WordPress mode retains donor PII only in the single protected Gravity Forms cart entry. WFC transaction, reporting, queue, and audit records contain operational data only.', 'wfc-cart')
+			);
+			if (defined('WFCC_CRM_MODE')) {
+				echo '<tr><th scope="row">' . esc_html__('Configuration override', 'wfc-cart') . '</th><td><p class="description">';
+				echo esc_html__('WFCC_CRM_MODE is defined in wp-config.php and overrides the saved selection.', 'wfc-cart');
+				echo '</p></td></tr>';
+			}
 			break;
 		case 'stripe':
 			wfcc_settings_text_row('stripe_publishable_key', __('Publishable key', 'wfc-cart'), isset($settings['stripe_publishable_key']) ? $settings['stripe_publishable_key'] : '');
@@ -214,6 +233,11 @@ function wfcc_render_settings_fields($tab, $settings) {
 			echo '<p class="description">' . esc_html__('Register this exact endpoint in Stripe and copy its signing secret above.', 'wfc-cart') . '</p></td></tr>';
 			break;
 		case 'salesforce':
+			if (!wfcc_uses_salesforce_crm()) {
+				echo '<tr><th scope="row">' . esc_html__('Integration status', 'wfc-cart') . '</th><td><p class="description">';
+				echo esc_html__('Salesforce delivery is disabled because CRM data location is set to WordPress. You may preconfigure these fields before changing modes.', 'wfc-cart');
+				echo '</p></td></tr>';
+			}
 			wfcc_settings_text_row('salesforce_login_url', __('Login URL', 'wfc-cart'), isset($settings['salesforce_login_url']) ? $settings['salesforce_login_url'] : 'https://login.salesforce.com');
 			wfcc_settings_text_row('salesforce_client_id', __('External Client App ID', 'wfc-cart'), isset($settings['salesforce_client_id']) ? $settings['salesforce_client_id'] : '');
 			wfcc_settings_secret_row('salesforce_client_secret', __('External Client App secret', 'wfc-cart'), wfcc_get_secret('salesforce_client_secret', 'WFCC_SALESFORCE_CLIENT_SECRET', 'WFCC_SALESFORCE_CLIENT_SECRET'));
@@ -237,13 +261,15 @@ function wfcc_render_settings_fields($tab, $settings) {
 					(string) ($diagnostic['checked_at'] ?? ''),
 					empty($diagnostic['category']) ? '' : ' (' . sanitize_key($diagnostic['category']) . ')'
 				);
-			$test_url = wp_nonce_url(
-				add_query_arg('action', 'wfcc_test_salesforce_connection', admin_url('admin-post.php')),
-				'wfcc_test_salesforce_connection'
-			);
-			echo '<tr><th scope="row">' . esc_html__('Connection test', 'wfc-cart') . '</th><td>';
-			echo '<a class="button button-secondary" href="' . esc_url($test_url) . '">' . esc_html__('Test saved connection', 'wfc-cart') . '</a>';
-			echo '<p class="description">' . esc_html($detail) . '</p></td></tr>';
+			if (wfcc_uses_salesforce_crm()) {
+				$test_url = wp_nonce_url(
+					add_query_arg('action', 'wfcc_test_salesforce_connection', admin_url('admin-post.php')),
+					'wfcc_test_salesforce_connection'
+				);
+				echo '<tr><th scope="row">' . esc_html__('Connection test', 'wfc-cart') . '</th><td>';
+				echo '<a class="button button-secondary" href="' . esc_url($test_url) . '">' . esc_html__('Test saved connection', 'wfc-cart') . '</a>';
+				echo '<p class="description">' . esc_html($detail) . '</p></td></tr>';
+			}
 			break;
 		case 'checkout':
 			$hosts = isset($settings['approved_redirect_hosts']) && is_array($settings['approved_redirect_hosts'])
@@ -315,6 +341,30 @@ function wfcc_settings_text_row($key, $label, $value, $type = 'text') {
 		esc_attr($type),
 		esc_attr((string) $value)
 	);
+}
+
+/**
+ * Render an allow-listed select setting row.
+ *
+ * @param string               $key         Key.
+ * @param string               $label       Label.
+ * @param string               $value       Selected value.
+ * @param array<string,string> $options     Options.
+ * @param string               $description Description.
+ * @return void
+ */
+function wfcc_settings_select_row($key, $label, $value, $options, $description = '') {
+	echo '<tr><th scope="row"><label for="wfcc-' . esc_attr($key) . '">' . esc_html($label) . '</label></th><td>';
+	echo '<select id="wfcc-' . esc_attr($key) . '" name="wfcc_settings[' . esc_attr($key) . ']">';
+	foreach ($options as $option_value => $option_label) {
+		echo '<option value="' . esc_attr($option_value) . '" ' . selected($value, $option_value, false) . '>';
+		echo esc_html($option_label) . '</option>';
+	}
+	echo '</select>';
+	if ('' !== $description) {
+		echo '<p class="description">' . esc_html($description) . '</p>';
+	}
+	echo '</td></tr>';
 }
 
 /**

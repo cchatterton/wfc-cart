@@ -67,8 +67,10 @@ $ready_context = array(
 	'gravity_forms'            => true,
 	'stripe'                   => true,
 	'webhook'                  => true,
+	'crm_mode'                 => 'salesforce',
 	'salesforce'               => true,
 	'packages'                 => true,
+	'wordpress_recurring_packages' => false,
 	'queue_scheduled'          => true,
 	'cron_disabled'            => false,
 	'receipt_email_enabled'    => false,
@@ -138,7 +140,8 @@ $GLOBALS['wfcc_test_administrator'] = new WFCC_Test_Role();
 wfcc_activate_site();
 wfcc_phase_7_assert(WFCC_SCHEMA_VERSION === get_option('wfcc_schema_version'), 'fresh activation must install the current schema');
 wfcc_phase_7_assert(isset(get_option('wfcc_settings')['trusted_proxy_cidrs']), 'fresh activation must include trusted-proxy defaults');
-wfcc_phase_7_assert((bool) wp_next_scheduled('wfcc_process_delivery_queue'), 'fresh activation must schedule delivery');
+wfcc_phase_7_assert('wordpress' === get_option('wfcc_settings')['crm_mode'], 'fresh activation must default to WordPress CRM mode');
+wfcc_phase_7_assert(false === wp_next_scheduled('wfcc_process_delivery_queue'), 'WordPress CRM mode must not schedule Salesforce delivery');
 wfcc_phase_7_assert((bool) wp_next_scheduled('wfcc_cleanup_idempotency'), 'fresh activation must schedule cleanup');
 wfcc_phase_7_assert(
 	isset($GLOBALS['wfcc_test_administrator']->capabilities['wfcc_manage_settings']),
@@ -148,5 +151,11 @@ wfcc_deactivate_site();
 wfcc_phase_7_assert(false === wp_next_scheduled('wfcc_process_delivery_queue'), 'deactivation must stop delivery scheduling');
 wfcc_phase_7_assert(false === wp_next_scheduled('wfcc_cleanup_idempotency'), 'deactivation must stop cleanup scheduling');
 wfcc_phase_7_assert(is_array(get_option('wfcc_settings')), 'deactivation must preserve settings');
+
+$GLOBALS['wfcc_test_options']['wfcc_settings']['crm_mode'] = 'salesforce';
+$GLOBALS['wfcc_test_schedules'] = array();
+wfcc_activate_site();
+wfcc_phase_7_assert((bool) wp_next_scheduled('wfcc_process_delivery_queue'), 'Salesforce CRM mode must schedule delivery');
+wfcc_deactivate_site();
 
 fwrite(STDOUT, "WFC Cart Phase 7 contract tests passed.\n");

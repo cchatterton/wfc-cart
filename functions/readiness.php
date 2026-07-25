@@ -53,12 +53,20 @@ function wfcc_evaluate_readiness_context($context) {
 			: __('The WFC option schema upgrade has not completed.', 'wfc-cart'),
 	);
 
+	$crm_mode = wfcc_sanitize_crm_mode($context['crm_mode'] ?? 'salesforce', 'salesforce');
+	$checks['crm_mode'] = array(
+		'label'  => __('CRM data location', 'wfc-cart'),
+		'status' => 'pass',
+		'detail' => 'salesforce' === $crm_mode
+			? __('Salesforce is the configured CRM and receives donor data server-to-server.', 'wfc-cart')
+			: __('WordPress mode retains donor PII only in the protected Gravity Forms cart entry.', 'wfc-cart'),
+	);
+
 	foreach (
 		array(
 			'gravity_forms' => array(__('Gravity Forms', 'wfc-cart'), __('Gravity Forms is available.', 'wfc-cart'), __('Gravity Forms is required for checkout.', 'wfc-cart')),
 			'stripe'        => array(__('Stripe credentials', 'wfc-cart'), __('Stripe publishable and secret keys are configured.', 'wfc-cart'), __('Stripe publishable or secret key is missing.', 'wfc-cart')),
 			'webhook'       => array(__('Stripe webhook', 'wfc-cart'), __('The webhook signing secret is configured.', 'wfc-cart'), __('The webhook signing secret is missing.', 'wfc-cart')),
-			'salesforce'    => array(__('Salesforce delivery', 'wfc-cart'), __('OAuth and the fixed Apex endpoint are configured.', 'wfc-cart'), __('Salesforce OAuth or endpoint configuration is incomplete.', 'wfc-cart')),
 			'packages'      => array(__('Checkout packages', 'wfc-cart'), __('At least one checkout package is configured.', 'wfc-cart'), __('No checkout package is configured.', 'wfc-cart')),
 		) as $key => $messages
 	) {
@@ -70,13 +78,42 @@ function wfcc_evaluate_readiness_context($context) {
 		);
 	}
 
-	$cron_ready = !empty($context['queue_scheduled']) && empty($context['cron_disabled']);
+	$salesforce_required = 'salesforce' === $crm_mode;
+	$salesforce_ready    = !$salesforce_required || !empty($context['salesforce']);
+	$checks['salesforce'] = array(
+		'label'  => __('Salesforce delivery', 'wfc-cart'),
+		'status' => $salesforce_ready ? 'pass' : 'blocking',
+		'detail' => !$salesforce_required
+			? __('Not required in WordPress CRM mode.', 'wfc-cart')
+			: ($salesforce_ready
+				? __('OAuth and the fixed Apex endpoint are configured.', 'wfc-cart')
+				: __('Salesforce OAuth or endpoint configuration is incomplete.', 'wfc-cart')),
+	);
+
+	$recurring_ready = $salesforce_required || empty($context['wordpress_recurring_packages']);
+	$checks['recurring_ownership'] = array(
+		'label'  => __('Recurring-payment ownership', 'wfc-cart'),
+		'status' => $recurring_ready ? 'pass' : 'blocking',
+		'detail' => $recurring_ready
+			? ($salesforce_required
+				? __('Salesforce owns subsequent recurring-payment orchestration.', 'wfc-cart')
+				: __('WordPress CRM mode is configured for one-off packages only.', 'wfc-cart'))
+			: __('WordPress CRM mode cannot enable recurring or SetupIntent packages because no downstream recurring-payment owner is configured.', 'wfc-cart'),
+	);
+
+	$cron_ready = $salesforce_required
+		? (!empty($context['queue_scheduled']) && empty($context['cron_disabled']))
+		: empty($context['queue_scheduled']);
 	$checks['scheduled_processing'] = array(
-		'label'  => __('Scheduled processing', 'wfc-cart'),
+		'label'  => __('CRM delivery scheduling', 'wfc-cart'),
 		'status' => $cron_ready ? 'pass' : 'warning',
-		'detail' => $cron_ready
-			? __('The delivery queue has a WP-Cron schedule.', 'wfc-cart')
-			: __('WP-Cron is disabled or the queue schedule is missing; verify an external cron runner.', 'wfc-cart'),
+		'detail' => $salesforce_required
+			? ($cron_ready
+				? __('The Salesforce delivery queue has a WP-Cron schedule.', 'wfc-cart')
+				: __('WP-Cron is disabled or the Salesforce queue schedule is missing; verify an external cron runner.', 'wfc-cart'))
+			: ($cron_ready
+				? __('No Salesforce delivery schedule is active in WordPress CRM mode.', 'wfc-cart')
+				: __('A Salesforce delivery schedule remains active even though WordPress CRM mode is selected.', 'wfc-cart')),
 	);
 
 	$receipt_ready = empty($context['receipt_email_enabled']) || !empty($context['receipt_email_field']);
@@ -135,8 +172,10 @@ function wfcc_get_readiness_context() {
 		'gravity_forms'            => class_exists('GFForms'),
 		'stripe'                   => (bool) (wfcc_get_stripe_publishable_key() && wfcc_get_secret('stripe_secret_key', 'WFCC_STRIPE_SECRET_KEY', 'WFCC_STRIPE_SECRET_KEY')),
 		'webhook'                  => (bool) wfcc_get_secret('stripe_webhook_secret', 'WFCC_STRIPE_WEBHOOK_SECRET', 'WFCC_STRIPE_WEBHOOK_SECRET'),
+		'crm_mode'                 => wfcc_get_crm_mode(),
 		'salesforce'               => (bool) (wfcc_get_salesforce_login_url() && wfcc_get_salesforce_client_id() && wfcc_get_salesforce_client_secret() && wfcc_get_salesforce_api_path()),
 		'packages'                 => (bool) wfcc_get_checkout_packages(),
+		'wordpress_recurring_packages' => 'wordpress' === wfcc_get_crm_mode() && wfcc_wordpress_crm_has_recurring_packages(),
 		'queue_scheduled'          => (bool) wp_next_scheduled('wfcc_process_delivery_queue'),
 		'cron_disabled'            => defined('DISABLE_WP_CRON') && DISABLE_WP_CRON,
 		'receipt_email_enabled'    => (bool) wfcc_get_setting('receipt_email_enabled', false),

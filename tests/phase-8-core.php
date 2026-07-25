@@ -177,8 +177,8 @@ $GLOBALS['wfcc_test_options'] = array(
 );
 $GLOBALS['wfcc_test_administrator'] = new WFCC_Test_Role();
 wfcc_maybe_upgrade_schema();
-wfcc_phase_8_assert('8' === get_option('wfcc_schema_version'), 'schema 7 must upgrade to schema 8');
-wfcc_phase_8_assert(array() === get_option(WFCC_RELEASE_GOVERNANCE_OPTION), 'schema 8 must initialise an empty governance journal');
+wfcc_phase_8_assert(WFCC_SCHEMA_VERSION === get_option('wfcc_schema_version'), 'schema 7 must upgrade to the current schema');
+wfcc_phase_8_assert(array() === get_option(WFCC_RELEASE_GOVERNANCE_OPTION), 'the upgrade must initialise an empty governance journal');
 wfcc_phase_8_assert(
 	isset($GLOBALS['wfcc_test_administrator']->capabilities['wfcc_approve_release']),
 	'schema 8 must grant the least-privilege release capability'

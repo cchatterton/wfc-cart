@@ -21,6 +21,9 @@ add_action('admin_post_wfcc_retry_delivery', 'wfcc_handle_manual_delivery_retry'
  */
 function wfcc_queue_completed_checkout_for_salesforce($transaction_id, $entry, $form) {
 	unset($entry, $form);
+	if (!wfcc_uses_salesforce_crm()) {
+		return;
+	}
 	wfcc_enqueue_salesforce_delivery($transaction_id, 'upsert');
 }
 
@@ -32,6 +35,10 @@ function wfcc_queue_completed_checkout_for_salesforce($transaction_id, $entry, $
  * @return bool
  */
 function wfcc_enqueue_salesforce_delivery($transaction_id, $operation = 'upsert') {
+	if (!wfcc_uses_salesforce_crm()) {
+		return false;
+	}
+
 	$payment_state = sanitize_key(get_post_meta($transaction_id, 'wfcc_payment_state', true));
 	if (!in_array($payment_state, array('succeeded', 'setup_succeeded', 'partially_refunded', 'refunded', 'disputed', 'cancelled'), true)) {
 		return false;
@@ -46,6 +53,8 @@ function wfcc_enqueue_salesforce_delivery($transaction_id, $operation = 'upsert'
 	}
 
 	update_post_meta($transaction_id, 'wfcc_salesforce_state', 'salesforce_pending');
+	update_post_meta($transaction_id, 'wfcc_crm_mode', 'salesforce');
+	update_post_meta($transaction_id, 'wfcc_crm_state', 'delivery_pending');
 	update_post_meta($transaction_id, 'wfcc_salesforce_operation', 'reconcile' === $operation ? 'reconcile' : 'upsert');
 	update_post_meta($transaction_id, 'wfcc_salesforce_payload_version', WFCC_SALESFORCE_PAYLOAD_VERSION);
 	update_post_meta($transaction_id, 'wfcc_salesforce_delivery_attempts', 0);
@@ -124,6 +133,10 @@ function wfcc_store_salesforce_delivery_error($transaction_id, $error) {
  * @return bool
  */
 function wfcc_deliver_salesforce_transaction($transaction_id) {
+	if (!wfcc_uses_salesforce_crm()) {
+		return false;
+	}
+
 	$lock = wfcc_acquire_delivery_lock($transaction_id);
 	if (!$lock) {
 		return false;
@@ -132,6 +145,7 @@ function wfcc_deliver_salesforce_transaction($transaction_id) {
 	try {
 		$attempt = absint(get_post_meta($transaction_id, 'wfcc_salesforce_delivery_attempts', true)) + 1;
 		update_post_meta($transaction_id, 'wfcc_salesforce_state', 'salesforce_delivering');
+		update_post_meta($transaction_id, 'wfcc_crm_state', 'delivering');
 		update_post_meta($transaction_id, 'wfcc_salesforce_delivery_attempts', $attempt);
 		update_post_meta($transaction_id, 'wfcc_salesforce_last_attempt', gmdate('c'));
 
@@ -144,12 +158,13 @@ function wfcc_deliver_salesforce_transaction($transaction_id) {
 				'wfcc_salesforce_payload_version',
 				sanitize_text_field($payload['schemaVersion'] ?? WFCC_SALESFORCE_PAYLOAD_VERSION)
 			);
-			update_post_meta($transaction_id, 'wfcc_salesforce_payload_hash', hash('sha256', wp_json_encode($payload)));
+			update_post_meta($transaction_id, 'wfcc_salesforce_payload_hash', wfcc_salesforce_payload_fingerprint($payload));
 			$result = wfcc_salesforce_deliver_payload($payload);
 		}
 
 		if (!is_wp_error($result)) {
 			update_post_meta($transaction_id, 'wfcc_salesforce_state', 'salesforce_delivered');
+			update_post_meta($transaction_id, 'wfcc_crm_state', 'delivered');
 			update_post_meta($transaction_id, 'wfcc_salesforce_delivered_at', gmdate('c'));
 			update_post_meta($transaction_id, 'wfcc_salesforce_reconciliation_state', $result['reconciliationStatus']);
 			delete_post_meta($transaction_id, 'wfcc_salesforce_next_attempt');
@@ -159,7 +174,6 @@ function wfcc_deliver_salesforce_transaction($transaction_id) {
 
 			$record_keys = array(
 				'transactionId'   => 'wfcc_salesforce_transaction_id',
-				'contactId'       => 'wfcc_salesforce_contact_id',
 				'recurringGiftId' => 'wfcc_salesforce_recurring_gift_id',
 			);
 			foreach ($record_keys as $response_key => $meta_key) {
@@ -176,6 +190,7 @@ function wfcc_deliver_salesforce_transaction($transaction_id) {
 		$limit      = min(20, max(1, absint(wfcc_get_setting('delivery_retry_limit', 8))));
 		if ($error_data['retryable'] && $attempt < $limit) {
 			update_post_meta($transaction_id, 'wfcc_salesforce_state', 'salesforce_failed');
+			update_post_meta($transaction_id, 'wfcc_crm_state', 'delivery_failed');
 			update_post_meta(
 				$transaction_id,
 				'wfcc_salesforce_next_attempt',
@@ -183,6 +198,7 @@ function wfcc_deliver_salesforce_transaction($transaction_id) {
 			);
 		} else {
 			update_post_meta($transaction_id, 'wfcc_salesforce_state', 'manual_review');
+			update_post_meta($transaction_id, 'wfcc_crm_state', 'manual_review');
 			update_post_meta($transaction_id, 'wfcc_salesforce_reconciliation_state', 'attention_required');
 			delete_post_meta($transaction_id, 'wfcc_salesforce_next_attempt');
 		}
@@ -200,6 +216,10 @@ function wfcc_deliver_salesforce_transaction($transaction_id) {
  * @return void
  */
 function wfcc_process_salesforce_delivery_queue() {
+	if (!wfcc_uses_salesforce_crm()) {
+		return;
+	}
+
 	$batch_size = min(50, max(1, absint(apply_filters('wfcc_salesforce_delivery_batch_size', 10))));
 	$ids = get_posts(
 		array(
@@ -252,10 +272,14 @@ function wfcc_handle_manual_delivery_retry() {
 		wp_die(esc_html__('You are not allowed to retry this delivery.', 'wfc-cart'));
 	}
 	check_admin_referer('wfcc_retry_delivery_' . $transaction_id);
+	if (!wfcc_uses_salesforce_crm()) {
+		wp_die(esc_html__('Salesforce delivery is disabled by the current CRM data-location setting.', 'wfc-cart'));
+	}
 
 	$state = sanitize_key(get_post_meta($transaction_id, 'wfcc_salesforce_state', true));
 	if (in_array($state, array('salesforce_failed', 'manual_review'), true)) {
 		update_post_meta($transaction_id, 'wfcc_salesforce_state', 'salesforce_pending');
+		update_post_meta($transaction_id, 'wfcc_crm_state', 'delivery_pending');
 		update_post_meta($transaction_id, 'wfcc_salesforce_delivery_attempts', 0);
 		update_post_meta($transaction_id, 'wfcc_salesforce_next_attempt', gmdate('Y-m-d H:i:s'));
 		update_post_meta($transaction_id, 'wfcc_salesforce_reconciliation_state', 'pending');

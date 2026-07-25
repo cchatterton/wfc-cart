@@ -46,6 +46,12 @@ function wfcc_get_checkout_package($package_id) {
 	if (isset($package['enabled']) && !$package['enabled']) {
 		return null;
 	}
+	if (
+		'wordpress' === wfcc_get_crm_mode()
+		&& wfcc_package_requires_external_recurring_owner($package)
+	) {
+		return null;
+	}
 
 	$package['id'] = $package_id;
 

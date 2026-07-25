@@ -1,8 +1,9 @@
 # WFC Cart operations guide
 
-WFC Cart 0.6.0 adds operational workflows around protected transaction
-records. These workflows do not turn WordPress into a donor CRM and do not
-store card data, Salesforce access tokens, or duplicate receipt recipients.
+WFC Cart operational workflows use protected transaction records without
+duplicating donor PII. In WordPress CRM mode, the single Gravity Forms cart
+entry is the authoritative donor record. Transaction-list links open that
+entry for users who also have the required Gravity Forms permissions.
 
 ## Capabilities
 
@@ -47,7 +48,7 @@ processes at most 5,000 transactions. It reports:
 
 - transaction count;
 - payment-state counts;
-- Salesforce delivery-state counts;
+- generic CRM-state counts;
 - original transaction totals by currency;
 - receipt count; and
 - batch count.
@@ -65,6 +66,8 @@ are:
 transaction_key
 created_at
 payment_state
+crm_mode
+crm_state
 salesforce_state
 amount_minor
 currency
@@ -90,7 +93,9 @@ transaction_key,fund_code,reference
 ```
 
 The import is limited to 500 rows and 256 KB. It can attach a sanitised fund
-code and external operational reference to an existing transaction.
+code and opaque external operational reference to an existing transaction.
+References accept machine identifiers such as `REF-100/ABC`; emails,
+phone-like values, and free text are rejected.
 
 It cannot:
 
