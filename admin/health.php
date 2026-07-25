@@ -13,15 +13,18 @@ if (!defined('ABSPATH')) {
  * @return array<string, array{label:string,status:string,detail:string}>
  */
 function wfcc_get_health_checks() {
+	$salesforce_enabled = wfcc_uses_salesforce_crm();
 	$salesforce_configured = '' !== wfcc_get_salesforce_login_url()
 		&& '' !== wfcc_get_salesforce_client_id()
 		&& '' !== wfcc_get_salesforce_client_secret()
 		&& '' !== wfcc_get_salesforce_api_path();
 	$salesforce_diagnostic = wfcc_get_salesforce_connection_diagnostic();
-	$salesforce_detail = $salesforce_configured
-		? __('OAuth client and fixed Apex endpoint configured', 'wfc-cart')
-		: __('OAuth client or fixed Apex endpoint missing', 'wfc-cart');
-	if (!empty($salesforce_diagnostic['checked_at'])) {
+	$salesforce_detail = !$salesforce_enabled
+		? __('Not required in WordPress CRM mode', 'wfc-cart')
+		: ($salesforce_configured
+			? __('OAuth client and fixed Apex endpoint configured', 'wfc-cart')
+			: __('OAuth client or fixed Apex endpoint missing', 'wfc-cart'));
+	if ($salesforce_enabled && !empty($salesforce_diagnostic['checked_at'])) {
 		$salesforce_detail .= sprintf(
 			__('; last connection test %1$s at %2$s', 'wfc-cart'),
 			'ok' === ($salesforce_diagnostic['status'] ?? '') ? __('passed', 'wfc-cart') : __('failed', 'wfc-cart'),
@@ -38,14 +41,28 @@ function wfcc_get_health_checks() {
 		: __('Receipt records enabled; automatic email disabled', 'wfc-cart');
 	$queue_next = wp_next_scheduled('wfcc_process_delivery_queue');
 	$cron_disabled = defined('DISABLE_WP_CRON') && DISABLE_WP_CRON;
-	$cron_status = $queue_next && !$cron_disabled ? 'ok' : 'warning';
-	$cron_detail = $cron_disabled
-		? __('WP-Cron is disabled; an external runner must invoke wp-cron.php.', 'wfc-cart')
-		: ($queue_next
-			? sprintf(__('Delivery queue scheduled for %s UTC', 'wfc-cart'), gmdate('c', $queue_next))
-			: __('Delivery queue schedule is missing; reactivate the plugin to restore it.', 'wfc-cart'));
+	$cron_status = $salesforce_enabled
+		? ($queue_next && !$cron_disabled ? 'ok' : 'warning')
+		: (!$queue_next ? 'ok' : 'warning');
+	if (!$salesforce_enabled) {
+		$cron_detail = $queue_next
+			? __('A Salesforce queue schedule remains active even though WordPress CRM mode is selected.', 'wfc-cart')
+			: __('Salesforce delivery scheduling is correctly disabled in WordPress CRM mode.', 'wfc-cart');
+	} else {
+		$cron_detail = $cron_disabled
+			? __('WP-Cron is disabled; an external runner must invoke wp-cron.php.', 'wfc-cart')
+			: ($queue_next
+				? sprintf(__('Delivery queue scheduled for %s UTC', 'wfc-cart'), gmdate('c', $queue_next))
+				: __('Delivery queue schedule is missing; save the CRM mode or reactivate the plugin to restore it.', 'wfc-cart'));
+	}
+	$wordpress_recurring = !$salesforce_enabled && wfcc_wordpress_crm_has_recurring_packages();
 
 	return array(
+		'crm_mode' => array(
+			'label'  => __('CRM data location', 'wfc-cart'),
+			'status' => 'ok',
+			'detail' => wfcc_get_crm_mode_label(),
+		),
 		'gravity_forms' => array(
 			'label'  => __('Gravity Forms', 'wfc-cart'),
 			'status' => class_exists('GFForms') ? 'ok' : 'warning',
@@ -60,8 +77,17 @@ function wfcc_get_health_checks() {
 		),
 		'salesforce' => array(
 			'label'  => __('Salesforce', 'wfc-cart'),
-			'status' => $salesforce_configured ? 'ok' : 'warning',
+			'status' => !$salesforce_enabled || $salesforce_configured ? 'ok' : 'warning',
 			'detail' => $salesforce_detail,
+		),
+		'recurring_ownership' => array(
+			'label'  => __('Recurring-payment ownership', 'wfc-cart'),
+			'status' => $wordpress_recurring ? 'warning' : 'ok',
+			'detail' => $wordpress_recurring
+				? __('Recurring or SetupIntent packages are unavailable until Salesforce CRM mode is enabled.', 'wfc-cart')
+				: ($salesforce_enabled
+					? __('Salesforce owns subsequent recurring-payment orchestration.', 'wfc-cart')
+					: __('WordPress CRM mode is configured for one-off packages only.', 'wfc-cart')),
 		),
 		'webhook' => array(
 			'label'  => __('Stripe webhook signature', 'wfc-cart'),

@@ -8,6 +8,8 @@ if (!defined('ABSPATH')) {
 }
 
 add_action('init', 'wfcc_register_data_model', 5);
+add_filter('manage_transaction_posts_columns', 'wfcc_transaction_admin_columns');
+add_action('manage_transaction_posts_custom_column', 'wfcc_render_transaction_admin_column', 10, 2);
 
 /**
  * Register the WordPress-native transaction records used by WFC Cart.
@@ -102,7 +104,9 @@ function wfcc_register_operational_post_type($slug, $singular, $plural, $show_ui
 			'exclude_from_search' => true,
 			'has_archive'         => false,
 			'hierarchical'        => false,
-			'supports'            => array('title', 'editor', 'author'),
+			// Operational records are created by WFC Cart. Donor-entered text
+			// belongs only in the linked Gravity Forms entry.
+			'supports'            => array(),
 			'capabilities'        => array(
 				'edit_post'          => 'wfcc_view_transactions',
 				'read_post'          => 'wfcc_view_transactions',
@@ -119,3 +123,56 @@ function wfcc_register_operational_post_type($slug, $singular, $plural, $show_ui
 	);
 }
 
+/**
+ * Add privacy-safe CRM and Gravity Forms references to the transaction list.
+ *
+ * @param array<string, string> $columns Existing columns.
+ * @return array<string, string>
+ */
+function wfcc_transaction_admin_columns($columns) {
+	$output = array();
+	foreach ($columns as $key => $label) {
+		$output[$key] = $label;
+		if ('title' === $key) {
+			$output['wfcc_crm'] = __('CRM state', 'wfc-cart');
+			$output['wfcc_entry'] = __('Cart entry', 'wfc-cart');
+		}
+	}
+
+	return $output;
+}
+
+/**
+ * Render transaction-list columns without exposing donor field values.
+ *
+ * @param string $column  Column key.
+ * @param int    $post_id Transaction ID.
+ * @return void
+ */
+function wfcc_render_transaction_admin_column($column, $post_id) {
+	if ('wfcc_crm' === $column) {
+		echo esc_html(wfcc_get_transaction_crm_mode($post_id) . ': ' . wfcc_get_transaction_crm_state($post_id));
+		return;
+	}
+	if ('wfcc_entry' !== $column) {
+		return;
+	}
+
+	$entry_id = absint(get_post_meta($post_id, 'wfcc_gravity_forms_entry_id', true));
+	$form_id  = absint(get_post_meta($post_id, 'wfcc_form_id', true));
+	if (!$entry_id || !$form_id) {
+		echo '<span aria-hidden="true">&mdash;</span>';
+		return;
+	}
+
+	$url = add_query_arg(
+		array(
+			'page' => 'gf_entries',
+			'view' => 'entry',
+			'id'   => $form_id,
+			'lid'  => $entry_id,
+		),
+		admin_url('admin.php')
+	);
+	echo '<a href="' . esc_url($url) . '">' . esc_html(sprintf(__('Entry #%d', 'wfc-cart'), $entry_id)) . '</a>';
+}

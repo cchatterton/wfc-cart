@@ -34,15 +34,28 @@ function wfcc_add_cron_schedules($schedules) {
  */
 function wfcc_schedule_delivery_queue($replace = false) {
 	if ($replace) {
-		$timestamp = wp_next_scheduled('wfcc_process_delivery_queue');
-		while ($timestamp) {
-			wp_unschedule_event($timestamp, 'wfcc_process_delivery_queue');
-			$timestamp = wp_next_scheduled('wfcc_process_delivery_queue');
-		}
+		wfcc_unschedule_delivery_queue();
+	}
+
+	if (!wfcc_uses_salesforce_crm()) {
+		return;
 	}
 
 	if (!wp_next_scheduled('wfcc_process_delivery_queue')) {
 		wp_schedule_event(time() + MINUTE_IN_SECONDS, 'wfcc_five_minutes', 'wfcc_process_delivery_queue');
+	}
+}
+
+/**
+ * Remove every scheduled Salesforce delivery event.
+ *
+ * @return void
+ */
+function wfcc_unschedule_delivery_queue() {
+	$timestamp = wp_next_scheduled('wfcc_process_delivery_queue');
+	while ($timestamp) {
+		wp_unschedule_event($timestamp, 'wfcc_process_delivery_queue');
+		$timestamp = wp_next_scheduled('wfcc_process_delivery_queue');
 	}
 }
 
@@ -109,6 +122,15 @@ function wfcc_maybe_upgrade_schema() {
 		wfcc_add_capabilities();
 	}
 
+	if (version_compare($installed_version, '9', '<')) {
+		if (!isset($settings['crm_mode'])) {
+			$settings['crm_mode'] = wfcc_infer_existing_crm_mode();
+		}
+		wfcc_remove_known_operational_pii_copies();
+		update_option('wfcc_settings', $settings, false);
+		wfcc_schedule_delivery_queue(true);
+	}
+
 	update_option('wfcc_schema_version', WFCC_SCHEMA_VERSION, false);
 	update_option(
 		'wfcc_last_schema_upgrade',
@@ -168,6 +190,7 @@ function wfcc_activate_site() {
 			'wfcc_settings',
 			array(
 				'currency'                => 'AUD',
+				'crm_mode'               => 'wordpress',
 				'approved_redirect_hosts' => array(),
 				'checkout_packages'       => array(),
 				'salesforce_login_url'    => 'https://login.salesforce.com',
@@ -222,11 +245,7 @@ function wfcc_activate($network_wide = false) {
  * @return void
  */
 function wfcc_deactivate_site() {
-	$timestamp = wp_next_scheduled('wfcc_process_delivery_queue');
-	while ($timestamp) {
-		wp_unschedule_event($timestamp, 'wfcc_process_delivery_queue');
-		$timestamp = wp_next_scheduled('wfcc_process_delivery_queue');
-	}
+	wfcc_unschedule_delivery_queue();
 
 	$timestamp = wp_next_scheduled('wfcc_cleanup_idempotency');
 	while ($timestamp) {

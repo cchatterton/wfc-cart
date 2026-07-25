@@ -65,6 +65,17 @@ if rg -n "'(email|payment_method_id|stripe_customer_id)'" "$REPOSITORY_DIR/opera
 	exit 1
 fi
 
+if rg -Pn "update_post_meta\\([^,]+,\\s*'[^']*(first_name|last_name|donor_name|email|phone|address|contact_id)" \
+	"$REPOSITORY_DIR" -g "*.php" -g "!dist/**" -g "!tests/**"; then
+	echo "Donor PII persistence detected outside Gravity Forms." >&2
+	exit 1
+fi
+
+if ! rg -q "wfcc_uses_salesforce_crm\\(\\)" "$REPOSITORY_DIR/salesforce/delivery.php"; then
+	echo "Salesforce delivery must be gated by the configured CRM mode." >&2
+	exit 1
+fi
+
 public_routes="$(rg -c "'permission_callback' => '__return_true'" "$REPOSITORY_DIR/rest/routes.php" || true)"
 if [[ "$public_routes" != "2" ]]; then
 	echo "Expected exactly two explicitly public REST routes." >&2

@@ -1,28 +1,32 @@
 # WFC Cart
 
 Author: AlphaSys
-Version: 0.8.0
+Version: 0.9.0
 Status: Release candidate
 
 ## Purpose
 
 WFC Cart is a WordPress and Gravity Forms donation and transaction platform.
 It separates website-owned campaign content from secure checkout, uses
-Stripe-hosted payment collection, and delivers controlled transaction data to
-Salesforce through server-to-server integration.
+Stripe-hosted payment collection, and supports either Salesforce CRM delivery
+or privacy-minimised WordPress retention in the single Gravity Forms cart
+entry.
 
 ## Current phase
 
-WFC Cart now includes Stripe checkout, Salesforce delivery, operational
-workflows, production-readiness controls, and Phase 8 release governance.
-Runtime configuration can be audited and external staging, security,
-accessibility, pilot, and final approval evidence can be recorded against the
-exact plugin version.
+Phase 9 adds an explicit CRM data-location choice. Salesforce mode retains the
+server-to-server delivery workflow. WordPress mode keeps donor PII only in the
+single protected Gravity Forms cart entry while WFC records retain operational
+identifiers, financial state, receipts, and aggregate reporting data.
 
 ## Key features
 
 - WFC-native settings, capabilities, dashboard, health, and delivery queue
   screens.
+- Selectable Salesforce or WordPress CRM data location, with safe upgrade
+  inference for existing installations.
+- Gravity Forms-entry-only donor PII retention in WordPress mode, enforced by
+  operational metadata guards and PII-free reporting/export contracts.
 - WFC-prefixed Gravity Forms cart and checkout roles.
 - Stripe Payment Element fields; card data is sent directly to Stripe.
 - Server-approved checkout packages and bounded donor-entered amounts.
@@ -65,6 +69,10 @@ exact plugin version.
 - WordPress 6.4 or later.
 - PHP 8.1 or later.
 - Gravity Forms for donation and checkout presentation.
+- Salesforce is optional for one-off payments when WordPress CRM mode is
+  selected.
+- Recurring and SetupIntent packages require Salesforce CRM mode in this
+  release.
 - Optional server-side adapters may add product, event, or shipping line items
   through the fixed WFC line-item contract.
 
@@ -72,7 +80,7 @@ exact plugin version.
 
 - `wfc-cart.php`: plugin metadata, constants, includes, and lifecycle hooks.
 - `functions/`: setup, data model, capabilities, dependencies, assets, helpers,
-  runtime/readiness hardening, and GitHub updater.
+  CRM/privacy boundaries, runtime/readiness hardening, and GitHub updater.
 - `gravity-forms/`: WFC Cart form roles and Gravity Forms integration.
 - `admin/`: WFC-native administration screens.
 - `checkout/`: checkout packages and protected transaction state.
@@ -94,6 +102,8 @@ exact plugin version.
   `WFCC_SALESFORCE_LOGIN_URL`, `WFCC_SALESFORCE_CLIENT_ID`,
   `WFCC_SALESFORCE_CLIENT_SECRET`, and `WFCC_SALESFORCE_API_PATH` may be
   defined in `wp-config.php` or as environment variables.
+- `WFCC_CRM_MODE` may be defined as `wordpress` or `salesforce` to enforce the
+  mode in a managed environment.
 - Salesforce access tokens are retained only in memory for the current PHP
   request and are never saved to WordPress.
 - The public release repository is `cchatterton/wfc-cart`. Define
@@ -113,13 +123,14 @@ The build creates `dist/wfc-cart.zip` and the matching root
 ## Checkout setup
 
 See `docs/stripe-setup.md`, `docs/gravity-forms-checkout.md`,
-`docs/salesforce-setup.md`, `docs/operations-guide.md`,
+`docs/crm-modes-and-privacy.md`, `docs/salesforce-setup.md`,
+`docs/operations-guide.md`,
 `docs/production-validation.md`, and `docs/release-governance.md`. Complete the
 staging matrix and every release gate before enabling general production use.
 
 ## Production approval
 
-Version 0.8.0 supplies the Phase 8 governance controls. It is not automatically
+Version 0.9.0 retains the Phase 8 governance controls. It is not automatically
 approved for production: authorised reviewers must run the current technical
 audit, attach non-sensitive evidence references, complete the bounded pilot,
 and approve all five gates.

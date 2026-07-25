@@ -2,6 +2,29 @@
 
 All notable changes to WFC Cart are recorded here.
 
+## 0.9.0 - 2026-07-25
+
+- Added an explicit CRM data-location setting with Salesforce and WordPress
+  operating modes.
+- Made Salesforce configuration, delivery scheduling, health, queueing, and
+  production-readiness checks conditional on Salesforce CRM mode.
+- Defaulted fresh installations and existing unconfigured sites to WordPress
+  mode while preserving Salesforce mode for sites with complete existing
+  credentials.
+- Retained donor PII only in the single protected Gravity Forms cart entry in
+  WordPress mode; transaction, line-item, reporting, export, receipt, and audit
+  records remain operational and PII-free.
+- Added operational metadata write guards, removed Salesforce Contact ID
+  persistence and known legacy donor-field metadata copies, restricted
+  imported references to opaque non-PII identifiers, and excluded donor fields
+  from stored delivery fingerprints.
+- Added CRM mode/state reporting and privacy-safe links from transactions to
+  the authoritative Gravity Forms cart entry.
+- Prevented recurring and SetupIntent packages in WordPress mode until a
+  supported downstream recurring-payment owner is configured.
+- Added schema 9 migration, Phase 9 contracts, documentation, and release
+  validation coverage.
+
 ## 0.8.0 - 2026-07-24
 
 - Added five ordered production release gates for external staging, independent

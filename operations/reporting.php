@@ -83,6 +83,7 @@ function wfcc_build_operational_report($transaction_ids) {
 	$report = array(
 		'transaction_count' => 0,
 		'payment_states'    => array(),
+		'crm_states'        => array(),
 		'salesforce_states' => array(),
 		'currency_totals'   => array(),
 		'receipt_count'     => 0,
@@ -98,10 +99,12 @@ function wfcc_build_operational_report($transaction_ids) {
 		++$report['transaction_count'];
 		$payment_state = sanitize_key(get_post_meta($transaction_id, 'wfcc_payment_state', true)) ?: 'unknown';
 		$salesforce_state = sanitize_key(get_post_meta($transaction_id, 'wfcc_salesforce_state', true)) ?: 'not_queued';
+		$crm_state = wfcc_get_transaction_crm_state($transaction_id);
 		$currency = strtoupper(sanitize_key(get_post_meta($transaction_id, 'wfcc_currency', true)));
 		$amount   = absint(get_post_meta($transaction_id, 'wfcc_amount', true));
 
 		$report['payment_states'][$payment_state] = ($report['payment_states'][$payment_state] ?? 0) + 1;
+		$report['crm_states'][$crm_state] = ($report['crm_states'][$crm_state] ?? 0) + 1;
 		$report['salesforce_states'][$salesforce_state] = ($report['salesforce_states'][$salesforce_state] ?? 0) + 1;
 		if (3 === strlen($currency)) {
 			$report['currency_totals'][$currency] = ($report['currency_totals'][$currency] ?? 0) + $amount;
@@ -115,6 +118,7 @@ function wfcc_build_operational_report($transaction_ids) {
 	}
 
 	ksort($report['payment_states']);
+	ksort($report['crm_states']);
 	ksort($report['salesforce_states']);
 	ksort($report['currency_totals']);
 

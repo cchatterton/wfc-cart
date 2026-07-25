@@ -26,7 +26,9 @@ function wfcc_register_admin_menu() {
 	);
 	add_submenu_page('wfcc', __('Dashboard', 'wfc-cart'), __('Dashboard', 'wfc-cart'), 'wfcc_view_transactions', 'wfcc', 'wfcc_render_dashboard_page');
 	add_submenu_page('wfcc', __('Transactions', 'wfc-cart'), __('Transactions', 'wfc-cart'), 'wfcc_view_transactions', 'edit.php?post_type=transaction');
-	add_submenu_page('wfcc', __('Delivery Queue', 'wfc-cart'), __('Delivery Queue', 'wfc-cart'), 'wfcc_view_transactions', 'wfcc-delivery-queue', 'wfcc_render_delivery_queue_page');
+	if (wfcc_uses_salesforce_crm()) {
+		add_submenu_page('wfcc', __('Delivery Queue', 'wfc-cart'), __('Delivery Queue', 'wfc-cart'), 'wfcc_view_transactions', 'wfcc-delivery-queue', 'wfcc_render_delivery_queue_page');
+	}
 	add_submenu_page('wfcc', __('Reports', 'wfc-cart'), __('Reports', 'wfc-cart'), 'wfcc_view_reports', 'wfcc-reports', 'wfcc_render_reports_page');
 	add_submenu_page('wfcc', __('Exports', 'wfc-cart'), __('Exports', 'wfc-cart'), 'wfcc_export_transactions', 'wfcc-exports', 'wfcc_render_exports_page');
 	add_submenu_page('wfcc', __('Imports', 'wfc-cart'), __('Imports', 'wfc-cart'), 'wfcc_import_operations', 'wfcc-imports', 'wfcc_render_imports_page');
@@ -76,10 +78,17 @@ function wfcc_render_dashboard_page() {
 				<h2><?php echo esc_html__('Transactions', 'wfc-cart'); ?></h2>
 				<p class="wfcc-admin__metric"><?php echo esc_html(number_format_i18n($transaction_total)); ?></p>
 			</section>
-			<section class="wfcc-admin__card">
-				<h2><?php echo esc_html__('Delivery queue', 'wfc-cart'); ?></h2>
-				<p class="wfcc-admin__metric"><?php echo esc_html(number_format_i18n(wfcc_count_pending_deliveries())); ?></p>
-			</section>
+			<?php if (wfcc_uses_salesforce_crm()) : ?>
+				<section class="wfcc-admin__card">
+					<h2><?php echo esc_html__('Delivery queue', 'wfc-cart'); ?></h2>
+					<p class="wfcc-admin__metric"><?php echo esc_html(number_format_i18n(wfcc_count_pending_deliveries())); ?></p>
+				</section>
+			<?php else : ?>
+				<section class="wfcc-admin__card">
+					<h2><?php echo esc_html__('CRM data location', 'wfc-cart'); ?></h2>
+					<p class="wfcc-admin__metric"><?php echo esc_html__('Gravity Forms', 'wfc-cart'); ?></p>
+				</section>
+			<?php endif; ?>
 			<section class="wfcc-admin__card">
 				<h2><?php echo esc_html__('30-day payment success', 'wfc-cart'); ?></h2>
 				<p class="wfcc-admin__metric"><?php echo esc_html(number_format_i18n($success_rate, 1) . '%'); ?></p>
@@ -105,7 +114,15 @@ function wfcc_render_dashboard_page() {
 				<p><?php echo esc_html(sprintf(__('%1$d of %2$d gates approved', 'wfc-cart'), $release['approved'], $release['total'])); ?></p>
 			</section>
 		</div>
-		<p><?php echo esc_html__('Configure and validate Stripe and Salesforce before enabling live WFC Cart checkout.', 'wfc-cart'); ?></p>
+		<p>
+			<?php
+			echo esc_html(
+				wfcc_uses_salesforce_crm()
+					? __('Configure and validate Stripe and Salesforce before enabling live WFC Cart checkout.', 'wfc-cart')
+					: __('Configure and validate Stripe and Gravity Forms before enabling live WFC Cart checkout. Donor PII remains in the single Gravity Forms cart entry.', 'wfc-cart')
+			);
+			?>
+		</p>
 	</div>
 	<?php
 }

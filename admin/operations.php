@@ -104,8 +104,8 @@ function wfcc_render_reports_page() {
 				<?php wfcc_render_report_counts($report['payment_states']); ?>
 			</section>
 			<section class="wfcc-admin__card">
-				<h2><?php echo esc_html__('Salesforce states', 'wfc-cart'); ?></h2>
-				<?php wfcc_render_report_counts($report['salesforce_states']); ?>
+				<h2><?php echo esc_html__('CRM states', 'wfc-cart'); ?></h2>
+				<?php wfcc_render_report_counts($report['crm_states']); ?>
 			</section>
 		</div>
 		<p class="description"><?php echo esc_html__('Reports are bounded to 5,000 transactions and contain no donor details.', 'wfc-cart'); ?></p>

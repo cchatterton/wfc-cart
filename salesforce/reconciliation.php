@@ -20,6 +20,10 @@ add_action('wfcc_stripe_event_reconciled', 'wfcc_queue_stripe_state_for_salesfor
 function wfcc_queue_stripe_state_for_salesforce($transaction_id, $event_type, $object) {
 	unset($object);
 
+	if (!wfcc_uses_salesforce_crm()) {
+		return;
+	}
+
 	if (in_array($event_type, array('payment_intent.succeeded', 'setup_intent.succeeded'), true)) {
 		wfcc_enqueue_salesforce_delivery($transaction_id, 'upsert');
 		return;
